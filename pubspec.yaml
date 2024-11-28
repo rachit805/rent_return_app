@@ -1,0 +1,51 @@
+name: rent_and_return
+description: "Application to manage store's inventory data"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  google_fonts: ^5.1.0
+  get: ^4.6.6
+  firebase_core: ^2.27.0
+  firebase_auth: ^4.17.8
+  sqflite: ^2.3.2
+  path: ^1.8.3
+  uuid: ^4.5.1
+  shared_preferences: ^2.2.3
+  get_storage: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  sqflite_common_ffi: ^2.0.0+1
+  
+
+  flutter_lints: ^2.0.0
+
+flutter:
+
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/images/
+  #   - images/a_dot_ham.jpeg
+  # example:
+  # fonts:
+    # - family: Roboto
+      # fonts:
+        # - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  
