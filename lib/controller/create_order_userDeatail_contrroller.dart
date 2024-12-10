@@ -17,7 +17,9 @@ class CreateOrderController extends GetxController {
   final returnDateController = TextEditingController();
   final newAddressController = TextEditingController();
   final advanceAmountController = TextEditingController();
-  
+
+  var customerId = 0.obs;
+
   DatabaseHelper dbHelper = DatabaseHelper();
   // RxMap customerData = <String, dynamic>{}.obs;
   final idCard = [
@@ -27,13 +29,12 @@ class CreateOrderController extends GetxController {
     'Voter ID',
     "Driving Licence"
   ];
-
+  // var customerId = "".obs;
   var selectedCard = ''.obs;
   void addUserData() async {
     if (mobController.text.isEmpty ||
         cNameController.text.isEmpty ||
         addressController.text.isEmpty ||
-        selectedCard == null ||
         idNumController.text.isEmpty) {
       showErrorSnackbar(
           "Error", "Please fill all required fields before selecting a date");
@@ -44,25 +45,34 @@ class CreateOrderController extends GetxController {
       'customer_name': cNameController.text,
       'mob_number': mobController.text,
       'alternative_mob_number': aMobController.text,
-      'id_card': selectedCard.value,
+      'id_type': selectedCard.value,
       'id_number': idNumController.text,
       'address': addressController.text,
       'ref_name': refNameController.text,
       'ref_number': refMobController.text,
     };
 
-    // Insert and get the result
-    Map<String, dynamic> result =
-        await dbHelper.insertCustomerAndReturnDetails(customerData);
+    try {
+      // Insert or update customer data
+      Map<String, dynamic> result =
+          await dbHelper.insertCustomerAndReturnDetails(customerData);
 
-    print(result);
-    final AddItemOrderController addItemInOrderController =
-        Get.put(AddItemOrderController());
-    addItemInOrderController.setCustomerData(customerData);
-    showSuccessSnackbar("Added", "Customer data saved succesfully!");
-    Get.to(() => AddItemInOrderScreen(
-        cname: cNameController.text, mob: mobController.text));
-    dbHelper.getAllCustomersData();
+      print("CUSTOMER DATA IN CONTROLLER: $result");
+      customerId.value = result['customer_id'];
+      print("CUSTOMER ID: ${customerId.value}");
+
+      final AddItemOrderController addItemInOrderController =
+          Get.put(AddItemOrderController());
+      addItemInOrderController.setCustomerData(customerData);
+
+      showSuccessSnackbar("Success", "Customer data saved successfully!");
+      Get.to(() => AddItemInOrderScreen(
+          cname: cNameController.text, mob: mobController.text));
+      dbHelper.getAllCustomersData();
+    } catch (e) {
+      print(e);
+      showErrorSnackbar("Error", "Failed to save customer data: $e");
+    }
   }
 
   void selectIdCard(String card) {

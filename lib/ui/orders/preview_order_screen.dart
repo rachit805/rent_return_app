@@ -23,9 +23,9 @@ class PreviewOrderScreen extends StatelessWidget {
 
     // If orderData contains initial cart items, set them in the controller
 // Remove this code since `cartItems` is already reactive
-    final List<Map<String, dynamic>> initialCartItems =
+    final List<Map<String, dynamic>> finalCartItems =
         (orderData['cart_items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    controller.setCartItems(initialCartItems);
+    controller.setCartItems(finalCartItems);
 
     return Scaffold(
       appBar: AppBar(
@@ -92,6 +92,12 @@ class PreviewOrderScreen extends StatelessWidget {
               cBtn(
                 "Place Order",
                 () {
+                  print("InititalCartItem IN UI:: $finalCartItems");
+
+                  print("InititalCartItem IN UI:: ${finalCartItems.length}");
+                  print("ORDERDATA IN UI:: $orderData");
+
+                  print("ORDERDATA IN UI:: ${orderData.length}");
                   Get.to(() =>
                       AddAddressScreen(totalAmount: controller.totalAmount));
                 },

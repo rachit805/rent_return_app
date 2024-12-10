@@ -184,7 +184,6 @@ class AddItemOrderController extends GetxController {
         final double buyPrice = skuData.first['purchase_price'];
         final double rentPrice = skuData.first['rent_price'];
         priceController.text = buyPrice.toStringAsFixed(1);
-  
 
         rentpriceController.text = rentPrice.toStringAsFixed(1);
       } else {
@@ -239,12 +238,10 @@ class AddItemOrderController extends GetxController {
     }
 
     currentItemIndex.value++;
-    calculateTotalAmount(); // Recalculate total amount
-    // Get.snackbar("Success", "Item saved successfully!");
+    calculateTotalAmount();
   }
 
   void nextItem() {
-    // Save the current item and proceed if fields are valid
     if (_validateFields()) {
       saveCurrentItem();
       loadCurrentItem(); // Load the next item
@@ -325,4 +322,5 @@ class AddItemOrderController extends GetxController {
       showErrorSnackbar("Error", "Fill all the Item Details");
     }
   }
+  
 }

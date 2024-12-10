@@ -103,40 +103,42 @@ class DatabaseHelper {
         FOREIGN KEY(sku_id) REFERENCES sku(sku_id)
       )
     ''');
+
+      await db.execute('''
+  CREATE TABLE "cart_items_data" (
+    "cart_id" INTEGER NOT NULL UNIQUE PRIMARY KEY,
+    "order_id" INTERGER,
+    "sku_id" INTEGER,
+    "sku_name" TEXT,
+    "quantity" INTEGER,
+    "buy_price" REAL,
+    "rent_price" REAL,
+    "total_price" REAL,
+    "image" TEXT,
+    "delivery_date" TEXT,
+    "return_date" TEXT,
+    "customer_id" INTEGER,
+    FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
+    
+    FOREIGN KEY(order_id) REFERENCES order_summary(order_id),
+    FOREIGN KEY(sku_id) REFERENCES sku(sku_id)
+  )
+''');
       await db.execute('''
   CREATE TABLE IF NOT EXISTS "customer_data" (
     "customer_id" INTEGER NOT NULL UNIQUE PRIMARY KEY,
     "customer_name" TEXT,
     "mob_number" TEXT,
     "alternative_mob_number" TEXT,
-    "id_card" TEXT,
+    "id_type" TEXT,
     "id_number" TEXT,
     "address" TEXT,
     "ref_name" TEXT,
-    "ref_number" TEXT
-  );
-''');
-
-      await db.execute('''
-  CREATE TABLE IF NOT EXISTS "order_cart" (
-    "user_cart_id" INTEGER NOT NULL UNIQUE PRIMARY KEY,
-    "category_id" INTEGER,
-    "item_id" INTEGER,
-    "size_id" INTEGER,
-    "category_name" TEXT,
-    "item_name" TEXT,
-    "size_name" TEXT,
-    "quantity" INTEGER,
-    "buy_price" REAL,
-    "rent_price" REAL,
-    "delivery_date" TEXT,
-    "return_date" TEXT,
-    "customer_id" INTEGER,
-    FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
-    FOREIGN KEY(category_id) REFERENCES category(category_uid),
-    FOREIGN KEY(item_id) REFERENCES item(item_id),
-    FOREIGN KEY(size_id) REFERENCES size(size_id)
-  );
+    "ref_number" TEXT,
+    "delivery_date" DATE,
+    "return_date" DATE
+  
+  )
 ''');
     });
   }
@@ -145,26 +147,46 @@ class DatabaseHelper {
       Map<String, dynamic> customerData) async {
     final db = await database;
 
-    // Insert the customer data and get the ID
-    int customerId = await db.insert(
+    // Check if a customer with the same mob_number already exists
+    final existingCustomer = await db.query(
       'customer_data',
-      customerData,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    final result = await db.query(
-      'customer_data',
-      where: 'customer_id = ?',
-      whereArgs: [customerId],
+      where: 'mob_number = ?',
+      whereArgs: [customerData['mob_number']],
       limit: 1,
     );
 
-    if (result.isNotEmpty) {
-      return {
-        'customer_id': result.first['customer_id'],
-        'mob_number': result.first['mob_number'],
-      };
+    if (existingCustomer.isNotEmpty) {
+      // Customer exists, update the record
+      await db.update(
+        'customer_data',
+        customerData,
+        where: 'mob_number = ?',
+        whereArgs: [customerData['mob_number']],
+      );
+
+      // Return the updated customer data
+      return existingCustomer.first;
     } else {
-      throw Exception('Failed to retrieve customer data.');
+      // Insert a new customer record
+      int customerId = await db.insert(
+        'customer_data',
+        customerData,
+        conflictAlgorithm: ConflictAlgorithm.fail, // Prevent overwriting
+      );
+
+      // Retrieve and return the newly inserted record
+      final result = await db.query(
+        'customer_data',
+        where: 'customer_id = ?',
+        whereArgs: [customerId],
+        limit: 1,
+      );
+
+      if (result.isNotEmpty) {
+        return result.first;
+      } else {
+        throw Exception('Failed to retrieve customer data.');
+      }
     }
   }
 
@@ -173,7 +195,7 @@ class DatabaseHelper {
     final db = await database;
     return await db.query(
       'customer_data',
-      where: 'mobile_number = ?',
+      where: 'mob_number = ?',
       whereArgs: [mobileNumber],
     );
   }

@@ -39,9 +39,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Rent & Return',
       theme: AppTheme.theme,
-      home: PaymentScreen(
-        cashAmount: '000',
-      ),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
