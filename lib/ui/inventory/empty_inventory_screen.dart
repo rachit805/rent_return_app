@@ -40,7 +40,7 @@ class EmptyInventoryScreen extends StatelessWidget {
                   color: Colors.grey.shade500, fontWeight: FontWeight.w500),
             ),
             cbottomButton(emptyinventorybtnLabel,
-                () => Get.to(() => AddInventoryScreen())),
+                () => Get.to(() => AddInventoryScreen()), AppTheme.theme.scaffoldBackgroundColor),
             cspacingHeight(sH * 0.05),
           ],
         ),

@@ -22,7 +22,7 @@ Widget csearchbar(double sW, String hintText) {
                     const EdgeInsets.symmetric(vertical: 5, horizontal: 30),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(40),
-                  borderSide: const BorderSide(
+                  borderSide: BorderSide(
                     color: liteBorderColor,
                   ),
                 ),

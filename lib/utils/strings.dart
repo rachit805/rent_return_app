@@ -35,7 +35,8 @@ const String iconpath = "assets/icons/";
 const Color iconColor = Colors.white;
 const Color errorColor = Colors.redAccent;
 const Color successColor = Colors.greenAccent;
-const Color liteBorderColor = Color.fromARGB(255, 193, 193, 193);
+Color liteBorderColor =
+    const Color.fromARGB(255, 193, 193, 193).withOpacity(0.2);
 Color primary2Color = const Color.fromARGB(255, 164, 215, 250);
 
 /// AppBar Title

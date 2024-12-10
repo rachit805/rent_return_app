@@ -7,8 +7,7 @@ class ItemDetailController extends GetxController {
   final DatabaseHelper dbHelper = DatabaseHelper();
 
   RxList<Map<String, dynamic>> slaveCardList = <Map<String, dynamic>>[].obs;
-  RxList<Map<dynamic, dynamic>> masterListData =
-      <Map<dynamic, dynamic>>[].obs; // Changed to RxList
+  RxList<Map<dynamic, dynamic>> masterListData = <Map<dynamic, dynamic>>[].obs;
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController buypriceController = TextEditingController();
   final TextEditingController rentpriceController = TextEditingController();
@@ -38,20 +37,21 @@ class ItemDetailController extends GetxController {
   }
 
   Future<void> addMasterCard(String skuId) async {
-    // Fetch the last stored masterCard data for the SKU ID
     final lastMasterCard = await dbHelper.getMasterCardBySkuId(skuId);
 
-    // Extract previous details if available
     double prevBuyPrice = lastMasterCard?['avg_buy_price'] ?? 0.0;
     double prevRentPrice = lastMasterCard?['avg_rent_price'] ?? 0.0;
     int prevQuantity = lastMasterCard?['total_quantity'] ?? 0;
 
-    // New stock details
     int newQuantity = int.tryParse(quantityController.text) ?? 0;
     double newBuyPrice = double.tryParse(buypriceController.text) ?? 0.0;
     double newRentPrice = double.tryParse(rentpriceController.text) ?? 0.0;
 
-    // Calculate new weighted average prices
+    if (newQuantity == 0) {
+      print("Invalid new quantity, skipping update.");
+      return;
+    }
+
     double updatedBuyPrice =
         ((prevBuyPrice * prevQuantity) + (newBuyPrice * newQuantity)) /
             (prevQuantity + newQuantity);
@@ -60,7 +60,6 @@ class ItemDetailController extends GetxController {
             (prevQuantity + newQuantity);
     int updatedQuantity = prevQuantity + newQuantity;
 
-    // Create updated masterCard data
     final updatedMasterCard = {
       "sku_id": skuId,
       "avg_buy_price": updatedBuyPrice,
@@ -68,13 +67,36 @@ class ItemDetailController extends GetxController {
       "total_quantity": updatedQuantity,
     };
 
-    // Update the database with new masterCard details
-    await dbHelper.insertOrUpdateMasterCard(updatedMasterCard);
+    try {
+      await dbHelper.insertOrUpdateMasterCard(updatedMasterCard);
 
-    print("MasterCard Updated: $updatedMasterCard");
+      // Update SKU after MasterCard
+      await updateSKUData(
+        skuId,
+        updatedQuantity,
+        updatedBuyPrice,
+        updatedRentPrice,
+      );
+
+      print("MasterCard Updated: $updatedMasterCard");
+    } catch (e) {
+      print("Error updating MasterCard: $e");
+    }
   }
 
-  void calculateMasterData() {
+  Future<void> updateSKUData(
+      String skuId, int quantity, double buyPrice, double rentPrice) async {
+    try {
+      await dbHelper.updateSKUData(skuId, quantity, buyPrice, rentPrice);
+      print("SKU Data updated for SKU: $skuId");
+      print(
+          "Updated Values: Quantity=$quantity, BuyPrice=$buyPrice, RentPrice=$rentPrice");
+    } catch (e) {
+      print("Error updating SKU data: $e");
+    }
+  }
+
+  Future<void> calculateMasterData() async {
     if (slaveCardList.isEmpty) {
       print("No data to calculate master data.");
       return;
@@ -99,12 +121,10 @@ class ItemDetailController extends GetxController {
       weightedRentPriceSum += itemRentPrice * itemQuantity;
     }
 
-    // Calculate weighted averages and round up to nearest integer
     double avgBuyPrice = (weightedBuyPriceSum / totalQuantity);
     double avgRentPrice = (weightedRentPriceSum / totalQuantity);
     int totalQuantityCeil = totalQuantity.ceil();
 
-    // Update master data
     masterListData.value = [
       {
         "sku_id": slaveCardList[0]['sku_id'],
@@ -113,6 +133,13 @@ class ItemDetailController extends GetxController {
         "total_quantity": totalQuantityCeil,
       }
     ];
+    // Update SKU after MasterCard
+    await updateSKUData(
+      slaveCardList[0]['sku_id'],
+      totalQuantity,
+      avgBuyPrice,
+      avgRentPrice,
+    );
 
     print("Master Data Calculated: $masterListData");
   }
@@ -138,13 +165,11 @@ class ItemDetailController extends GetxController {
     try {
       await addMasterCard(skuID);
 
-      // Clear input fields
       buypriceController.clear();
       quantityController.clear();
       rentpriceController.clear();
-
-      // Show success snackbar
-    await  Get.snackbar(
+      Get.back();
+      Get.snackbar(
         'Success',
         'Stock added successfully!',
         snackPosition: SnackPosition.BOTTOM,
@@ -153,13 +178,9 @@ class ItemDetailController extends GetxController {
         duration: const Duration(seconds: 3),
       );
       await dbHelper.insertSlaveCard(slaveData);
-
-      // Navigate back
-      // Get.back();
     } catch (e) {
       print("Error adding stock: $e");
 
-      // Show error snackbar
       Get.snackbar(
         'Error',
         e.toString(),

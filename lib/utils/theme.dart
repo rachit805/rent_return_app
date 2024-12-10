@@ -59,10 +59,10 @@ class AppTheme {
             fontFamily: "Roboto"),
         //
         labelMedium: const TextStyle(
-            fontFamily: "Roboto",
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white),
+          fontFamily: "Roboto",
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
         labelSmall: const TextStyle(fontSize: 10, fontWeight: FontWeight.w200),
       ),
     );

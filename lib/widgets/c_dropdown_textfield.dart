@@ -5,15 +5,16 @@ import 'package:rent_and_return/utils/theme.dart';
 class CustomDropdownWithTextField extends StatelessWidget {
   final List<String> dataList;
   final RxString selectedItem;
-  final Function(String) onAddNewItem;
+  final Function(String)? onAddNewItem;
   final Function(String) onSelectItem;
-
+  final String label;
   const CustomDropdownWithTextField({
     required this.dataList,
     required this.selectedItem,
-    required this.onAddNewItem,
+    this.onAddNewItem,
     required this.onSelectItem,
     super.key,
+    required this.label,
   });
 
   @override
@@ -88,7 +89,7 @@ class CustomDropdownWithTextField extends StatelessWidget {
                                     // Convert input to camel case
                                     final camelCaseValue = toCamelCase(value);
 
-                                    onAddNewItem(camelCaseValue);
+                                    onAddNewItem!(camelCaseValue);
                                     selectedItem.value =
                                         camelCaseValue; // Set the camel case value as selected
                                     Navigator.pop(
@@ -116,7 +117,7 @@ class CustomDropdownWithTextField extends StatelessWidget {
                   children: [
                     Text(
                       selectedItem.value.isEmpty
-                          ? "Select Item"
+                          ? "Select $label"
                           : selectedItem.value,
                       style: const TextStyle(
                         color: Colors.black,

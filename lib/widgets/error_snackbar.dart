@@ -7,7 +7,18 @@ void showErrorSnackbar(title, message) {
     title, message,
     backgroundColor: errorColor,
     colorText: Colors.white,
-    snackPosition: SnackPosition.TOP , // Optional: Snack bar position
+    snackPosition: SnackPosition.TOP, // Optional: Snack bar position
+    duration: const Duration(
+        seconds: 2), // Optional: Duration for snack bar to display
+  );
+}
+
+void showSuccessSnackbar(title, message) {
+  Get.snackbar(
+    title, message,
+    backgroundColor: successColor,
+    colorText: Colors.white,
+    snackPosition: SnackPosition.TOP, // Optional: Snack bar position
     duration: const Duration(
         seconds: 2), // Optional: Duration for snack bar to display
   );

@@ -44,6 +44,7 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedCategory,
                     onAddNewItem: controller.addCategory,
                     onSelectItem: controller.selectedCategory,
+                    label: 'category',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -54,6 +55,7 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedItem,
                     onAddNewItem: controller.addItem,
                     onSelectItem: controller.selectedItem,
+                    label: 'item',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -64,6 +66,7 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedSize,
                     onAddNewItem: controller.addSize,
                     onSelectItem: controller.selectedSize,
+                    label: 'size',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -86,7 +89,7 @@ class AddInventoryScreen extends StatelessWidget {
                     await controller.addItemToInventory();
                     controller.debugPrintDatabase();
                     // Get.to(() =>  HomeScreen());
-                  }),
+                  }, Colors.white),
                   Spacing.v20,
                 ],
               ),

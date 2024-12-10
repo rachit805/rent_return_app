@@ -88,7 +88,8 @@ class OtpVerificationScreen extends StatelessWidget {
                   ),
                   cspacingHeight(sH * 0.08),
                   // Submit button
-                  cBtn(loginbtnLabel, () => controller.verifyOTP()),
+                  cBtn(loginbtnLabel, () => controller.verifyOTP(),
+                      Colors.white),
                 ],
               ),
             ),

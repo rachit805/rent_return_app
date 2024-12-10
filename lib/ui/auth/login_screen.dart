@@ -77,7 +77,7 @@ class LogInScreen extends StatelessWidget {
                   ),
 
                   // Login button
-                  cbottomButton(loginbtnLabel, () => controller.sendOTP()),
+                  cbottomButton(loginbtnLabel, () => controller.sendOTP(), AppTheme.theme.scaffoldBackgroundColor),
                   Spacing.v20,
                 ],
               ),

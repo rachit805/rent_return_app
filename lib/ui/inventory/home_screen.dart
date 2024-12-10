@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/home_screen_controller.dart';
+import 'package:rent_and_return/controller/item_detail_controller.dart';
 import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
 import 'package:rent_and_return/ui/inventory/item_detail_screen.dart';
 import 'package:rent_and_return/utils/strings.dart';
@@ -20,12 +21,14 @@ class HomeScreen extends StatelessWidget {
     double sW = MediaQuery.of(context).size.width;
     double sH = MediaQuery.of(context).size.height;
     final HomeController controller = Get.put(HomeController());
-
+    final ItemDetailController itemDetailController =
+        Get.put(ItemDetailController());
     Future<void> refreshData() async {
       await Future.delayed(const Duration(seconds: 1));
       await controller.fetchItems();
+      await itemDetailController.calculateMasterData();
     }
- 
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -88,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       itemBuilder: (context, index) {
                         final item = controller.items[index];
-                        
+
                         print("ITEM LENGTH IN UI ${controller.items.length}");
                         return GestureDetector(
                           onTap: () {},

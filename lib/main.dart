@@ -9,6 +9,11 @@ import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
 import 'package:rent_and_return/ui/inventory/empty_inventory_screen.dart';
 import 'package:rent_and_return/ui/inventory/item_detail_screen.dart';
+import 'package:rent_and_return/ui/orders/add_items_order.dart';
+import 'package:rent_and_return/ui/orders/all_orders_screen.dart';
+import 'package:rent_and_return/ui/orders/new_orders_screen.dart';
+import 'package:rent_and_return/ui/orders/payment_screen.dart';
+import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
 import 'package:rent_and_return/ui/welcomeUI/onboarding_screen.dart';
 import 'package:rent_and_return/ui/welcomeUI/splash_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
@@ -18,7 +23,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    await GetStorage.init(); // Initialize GetStorage
+  await GetStorage.init();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -29,13 +34,14 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Rent & Return',
       theme: AppTheme.theme,
-      home: SplashScreen(),
+      home: PaymentScreen(
+        cashAmount: '000',
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

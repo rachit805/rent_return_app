@@ -19,9 +19,9 @@ class AddItemController extends GetxController {
   RxString selectedSize = ''.obs;
 
   // Text Field Controllers
-  TextEditingController categoryNameController = TextEditingController();
-  TextEditingController itemNameController = TextEditingController();
-  TextEditingController sizeNameController = TextEditingController();
+  // TextEditingController categoryNameController = TextEditingController();
+  // TextEditingController itemNameController = TextEditingController();
+  // TextEditingController sizeNameController = TextEditingController();
 
   TextEditingController quantityController = TextEditingController();
   TextEditingController purchasePriceController = TextEditingController();
@@ -49,15 +49,24 @@ class AddItemController extends GetxController {
     sizes.value = sizeData.map((s) => s['size_name'].toString()).toList();
   }
 
-  // Add a new category
   Future<void> addCategory(String categoryName) async {
-    final category = {'category_name': categoryName, 'category_desc': ''};
-    await dbHelper.insertCategory(category);
-    await loadCategories();
-    Get.snackbar("Success", "Category added.");
+    try {
+      // Check if the category already exists
+      final existingCategory = await dbHelper.getCategoryByName(categoryName);
+
+      if (existingCategory.isNotEmpty) {
+        Get.snackbar("Error", "Category already exists.");
+      } else {
+        final category = {'category_name': categoryName, 'category_desc': ''};
+        await dbHelper.insertCategory(category);
+        await loadCategories();
+        Get.snackbar("Success", "Category added.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to add category: $e");
+    }
   }
 
-  // Add a new item under the selected category
   Future<void> addItem(String itemName) async {
     if (selectedCategory.isEmpty) {
       Get.snackbar("Error", "Please select a category first.");
@@ -71,6 +80,15 @@ class AddItemController extends GetxController {
       return;
     }
 
+    // Check if the item already exists under the selected category
+    final existingItem =
+        await dbHelper.getItemByNameAndCategory(itemName, categoryUid);
+    if (existingItem.isNotEmpty) {
+      Get.snackbar("Error", "Item already exists in this category.");
+      return;
+    }
+
+    // Prepare the new item data
     final item = {
       'category_uid': categoryUid,
       'item_name': itemName,
@@ -81,7 +99,8 @@ class AddItemController extends GetxController {
     // Insert item and get item ID
     final itemId = await dbHelper.insertItemAndGetId(item);
     if (itemId != null) {
-      await loadItems(categoryUid);
+      await loadItems(
+          categoryUid); // Refresh the item list for the selected category
       Get.snackbar("Success", "Item added successfully with ID: $itemId.");
     } else {
       Get.snackbar("Error", "Failed to add item.");
@@ -99,6 +118,12 @@ class AddItemController extends GetxController {
     final itemId = await _getItemIdByName(selectedItem.value);
     if (itemId == null) {
       Get.snackbar("Error", "Invalid item selection.");
+      return;
+    }
+    // Check if the size already exists under the selected category
+    final existingSize = await dbHelper.getSIzeByItem(sizeName, itemId);
+    if (existingSize.isNotEmpty) {
+      Get.snackbar("Error", "Size already exists in this category.");
       return;
     }
 

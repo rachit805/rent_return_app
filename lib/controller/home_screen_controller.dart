@@ -1,15 +1,22 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:rent_and_return/controller/item_detail_controller.dart';
 import 'package:rent_and_return/services/data_services.dart';
 
 class HomeController extends GetxController {
   final DatabaseHelper dbHelper = DatabaseHelper();
 
   RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
-
+  final ItemDetailController itemDetailController =
+      Get.put(ItemDetailController());
   @override
   void onInit() {
     super.onInit();
     fetchItems();
+    items.refresh();
+    itemDetailController.masterListData.refresh();
+    
+
   }
 
   Future<void> fetchItems() async {
@@ -25,12 +32,14 @@ class HomeController extends GetxController {
           return dateB.compareTo(dateA); // Descending order
         });
 
+        print("Fetched SKU Items: $items");
         print("ITEMS LENGTH IN CONTROLLER: ${items.length}");
       } else {
         items.clear();
+        print("No SKU items found.");
       }
     } catch (e) {
-      print("Error fetching items: $e");
+      print("Error fetching SKU items: $e");
     }
   }
 }

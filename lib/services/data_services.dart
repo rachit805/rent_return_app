@@ -103,7 +103,98 @@ class DatabaseHelper {
         FOREIGN KEY(sku_id) REFERENCES sku(sku_id)
       )
     ''');
+      await db.execute('''
+  CREATE TABLE IF NOT EXISTS "customer_data" (
+    "customer_id" INTEGER NOT NULL UNIQUE PRIMARY KEY,
+    "customer_name" TEXT,
+    "mob_number" TEXT,
+    "alternative_mob_number" TEXT,
+    "id_card" TEXT,
+    "id_number" TEXT,
+    "address" TEXT,
+    "ref_name" TEXT,
+    "ref_number" TEXT
+  );
+''');
+
+      await db.execute('''
+  CREATE TABLE IF NOT EXISTS "order_cart" (
+    "user_cart_id" INTEGER NOT NULL UNIQUE PRIMARY KEY,
+    "category_id" INTEGER,
+    "item_id" INTEGER,
+    "size_id" INTEGER,
+    "category_name" TEXT,
+    "item_name" TEXT,
+    "size_name" TEXT,
+    "quantity" INTEGER,
+    "buy_price" REAL,
+    "rent_price" REAL,
+    "delivery_date" TEXT,
+    "return_date" TEXT,
+    "customer_id" INTEGER,
+    FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
+    FOREIGN KEY(category_id) REFERENCES category(category_uid),
+    FOREIGN KEY(item_id) REFERENCES item(item_id),
+    FOREIGN KEY(size_id) REFERENCES size(size_id)
+  );
+''');
     });
+  }
+
+  Future<Map<String, dynamic>> insertCustomerAndReturnDetails(
+      Map<String, dynamic> customerData) async {
+    final db = await database;
+
+    // Insert the customer data and get the ID
+    int customerId = await db.insert(
+      'customer_data',
+      customerData,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    final result = await db.query(
+      'customer_data',
+      where: 'customer_id = ?',
+      whereArgs: [customerId],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return {
+        'customer_id': result.first['customer_id'],
+        'mob_number': result.first['mob_number'],
+      };
+    } else {
+      throw Exception('Failed to retrieve customer data.');
+    }
+  }
+
+  Future<List<Map<String, Object?>>> getUserDataByMobile(
+      String mobileNumber) async {
+    final db = await database;
+    return await db.query(
+      'customer_data',
+      where: 'mobile_number = ?',
+      whereArgs: [mobileNumber],
+    );
+  }
+
+  Future<List<Map<String, Object?>>> getAllCustomersData() async {
+    final db = await database;
+    return db.query("customer_data");
+  }
+
+  Future<void> insertCustomerData(Map<String, dynamic> customerData) async {
+    final db = await database;
+    await db.insert('customer_data', customerData,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> insertCartData(Map<String, dynamic> cartData) async {
+    final db = await database;
+    await db.insert(
+      'order_cart',
+      cartData,
+    );
   }
 
   Future<Map<String, dynamic>?> getMasterCardBySkuId(String skuId) async {
@@ -125,7 +216,11 @@ class DatabaseHelper {
     final db = await database;
     await db.insert('sku', sku, conflictAlgorithm: ConflictAlgorithm.replace);
   }
+// void updateSKUData()async{
+// final db = await database;
+// await db.update("sku", values)
 
+// }
   // Insert a MasterCard into the database
   Future<void> insertMasterCard(Map<String, dynamic> masterCardData) async {
     final db = await database;
@@ -155,6 +250,24 @@ class DatabaseHelper {
       where: 'category_id = ? AND item_id = ? AND size_id = ?',
       whereArgs: [categoryId, itemId, sizeId],
     );
+  }
+
+// Update SKU version
+  Future<void> updateSKUData(
+      String skuId, int quantity, double buyPrice, double rentPrice) async {
+    final db = await database;
+    db.query("mastercarddetail");
+    await db.update(
+      'sku',
+      {
+        'quantity': quantity,
+        'purchase_price': buyPrice,
+        'rent_price': rentPrice
+      },
+      where: 'sku_uid = ?',
+      whereArgs: [skuId],
+    );
+    print("$skuId AND $quantity AND $buyPrice AND $rentPrice");
   }
 
 // Insert new stock data into slavecarddetail
@@ -196,6 +309,75 @@ class DatabaseHelper {
     final db = await database;
     return await db
         .query('item', where: 'category_uid = ?', whereArgs: [categoryUid]);
+  }
+
+  Future<List<Map<String, dynamic>>> getItemByNameAndCategory(
+      String itemName, int categoryUid) async {
+    final db = await database;
+    return await db.query(
+      'item',
+      where: 'item_name = ? AND category_uid = ?',
+      whereArgs: [itemName, categoryUid],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSIzeByItem(
+      String sizeName, int itemID) async {
+    final db = await database;
+    return await db.query(
+      'size',
+      where: 'size_name = ? AND item_id = ?',
+      whereArgs: [sizeName, itemID],
+    );
+  }
+
+  // Fetch all items under a category_name
+  Future<List<Map<String, dynamic>>> getCategoryByName(
+      String categoryName) async {
+    final db = await database;
+    return await db.query(
+      'category',
+      where: 'category_name = ?',
+      whereArgs: [categoryName],
+    );
+  }
+
+  // Fetch SKU by SKU Name:
+  Future<List<Map<String, dynamic>>> getSKUByName(String skuName) async {
+    final db = await database;
+    return await db.query(
+      'sku',
+      where: 'sku_name = ?',
+      whereArgs: [skuName],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getItemsByCategoryId(
+      int categoryUid) async {
+    final db = await database;
+    return await db.query(
+      'item',
+      where: 'category_uid = ?',
+      whereArgs: [categoryUid],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getItemByName(String itemName) async {
+    final db = await database;
+    return await db.query(
+      'item',
+      where: 'item_name = ?',
+      whereArgs: [itemName],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSizesByItemId(int itemId) async {
+    final db = await database;
+    return await db.query(
+      'size',
+      where: 'item_id = ?',
+      whereArgs: [itemId],
+    );
   }
 
   // Fetch all sizes for an item

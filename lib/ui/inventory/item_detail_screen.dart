@@ -4,6 +4,7 @@ import 'package:rent_and_return/controller/home_screen_controller.dart';
 import 'package:rent_and_return/controller/item_detail_controller.dart';
 import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
+import 'package:rent_and_return/widgets/action_btn.dart';
 import 'package:rent_and_return/widgets/c_appbar.dart';
 import 'package:rent_and_return/widgets/c_btn.dart';
 import 'package:rent_and_return/widgets/c_sizedbox.dart';
@@ -48,20 +49,12 @@ class ItemDetailScreen extends StatelessWidget {
             title: "Item Details",
             textcolor: AppTheme.theme.scaffoldBackgroundColor,
             action: [
-              Padding(
-                padding: const EdgeInsets.only(right: 15),
-                child: IconButtonWithLabel(
-                  icon: Icons.add,
-                  label: "Add Stock",
-                  textColor: AppTheme.theme.scaffoldBackgroundColor,
-                  onPressed: () {
-                    showModalBottomSheet(
-                        context: context,
-                        builder: (builder) => bottomsheet(context, controller,
-                            skuId, categoryId, itemId, sizeId));
-                  },
-                ),
-              ),
+              actionBtn(
+                  () => showModalBottomSheet(
+                      context: context,
+                      builder: (builder) => bottomsheet(context, controller,
+                          skuId, categoryId, itemId, sizeId)),
+                  'Add Stock')
             ],
             leading: true,
           ),
@@ -150,7 +143,7 @@ class ItemDetailScreen extends StatelessWidget {
             cBtn("Add Stock", () async {
               await controller.addmoreStock(skuId, categoryID, itemId, sizeId);
               Get.back();
-            }),
+            }, Colors.white),
           ],
         ),
       ),
