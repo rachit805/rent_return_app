@@ -151,7 +151,7 @@ class PaymentScreen extends StatelessWidget {
             child: cBtn(
               "Receive Payment",
               () {
-                Get.to(() => const PaymentSuccessScreen());
+                controller.insertOrderSummaryData();
               },
               Colors.white,
             ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/services/data_services.dart';
+import 'package:rent_and_return/ui/orders/add_address_screen.dart';
 import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
+import 'package:sqflite/sqflite.dart';
 
 class AddItemOrderController extends GetxController {
   @override
@@ -37,6 +39,51 @@ class AddItemOrderController extends GetxController {
   DatabaseHelper dbHelper = DatabaseHelper();
   var customerData = <String, dynamic>{}.obs;
   final RxList<Map<String, dynamic>> cartItems = <Map<String, dynamic>>[].obs;
+  final RxString orderid = ''.obs;
+  final RxInt customerId = 0.obs;
+  final RxString cartId = ''.obs;
+  final RxString returnDate = ''.obs;
+  final RxString deliveryDate = ''.obs;
+
+  Future<void> storeCartItemsInDBAndPlaceOrder() async {
+    for (var cartItem in cartItems) {
+      final orderId =
+          "${customerData['mob_number']}_${DateTime.now().millisecondsSinceEpoch}";
+      final cartItemData = {
+        'sku_name': cartItem['item'],
+        'quantity': cartItem['quantity'],
+        'buy_price': cartItem['price'],
+        'rent_price': cartItem['rentPrice'],
+        'total_price': cartItem['totalItemRent'],
+        'delivery_date': cartItem['deliveryDate'],
+        'return_date': customerData['return_date'] ?? '',
+        'customer_id': customerData['customer_id'] ?? 0,
+        'order_id': orderId,
+        'image': cartItem['image'] ?? '',
+      };
+
+      try {
+        // Insert cart item and get the inserted data
+        final insertedData = await dbHelper.insertCartItem(cartItemData);
+
+        // Print the inserted data
+        if (insertedData != null) {
+          customerId.value = insertedData['customer_id'];
+          orderid.value = insertedData['order_id'];
+          cartId.value = insertedData['cart_id'].toString();
+          returnDate.value = insertedData['return_date'];
+          deliveryDate.value = insertedData['delivery_date'];
+
+          print('Inserted cart item DATA>>>> $insertedData');
+          Get.to(() => AddAddressScreen(totalAmount: totalAmount));
+        } else {
+          print('Failed to insert cart item.');
+        }
+      } catch (e) {
+        print('Error inserting cart item: $e');
+      }
+    }
+  }
 
   // Set initial cart items
   void setCartItems(List<Map<String, dynamic>> items) {
@@ -322,5 +369,4 @@ class AddItemOrderController extends GetxController {
       showErrorSnackbar("Error", "Fill all the Item Details");
     }
   }
-  
 }

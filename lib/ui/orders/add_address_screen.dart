@@ -165,9 +165,10 @@ class AddAddressScreen extends StatelessWidget {
                                 ),
                                 cspacingHeight(sH * 0.05),
                                 cBtn("Procced to pay", () {
-                                  print(controller.remainingAmount.value);
+                                  // print(controller.remainingAmount.value);
                                   Get.to(() => PaymentScreen(
-                                        cashAmount: controller.remainingAmount
+                                        cashAmount: controller
+                                            .advanceAmountController.text
                                             .toString(),
                                       ));
                                 }, Colors.white)
@@ -286,9 +287,10 @@ class AddAddressScreen extends StatelessWidget {
               ),
               cspacingHeight(sH * 0.1),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child:cBorderBtn("Preview Items")
-              ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: cBorderBtn("Preview Items", () {
+                    Get.back();
+                  })),
             ],
           ),
         ),

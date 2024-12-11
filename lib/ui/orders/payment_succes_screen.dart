@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:rent_and_return/ui/orders/order_receipt_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_appbar2.dart';
 import 'package:rent_and_return/widgets/c_border_btn.dart';
@@ -6,7 +8,10 @@ import 'package:rent_and_return/widgets/c_btn.dart';
 import 'package:rent_and_return/widgets/c_sizedbox.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
-  const PaymentSuccessScreen({super.key});
+  final Map<String, dynamic> orderSummary;
+
+  const PaymentSuccessScreen({Key? key, required this.orderSummary})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -48,37 +53,55 @@ class PaymentSuccessScreen extends StatelessWidget {
               ),
             ),
             cspacingHeight(sH * 0.05),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text("Amount Paid in Advance"), Text("3000")],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(
-                color: Colors.grey,
-                thickness: 1.5,
-              ),
-            ),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [Text("Remaining Amount"), Text("3000")],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(
-                color: Colors.grey,
-                thickness: 1.5,
-              ),
-            ),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Transaction Date"),
-                Text("22/10/2024, 03:30 PM")
+                const Text("Amount Paid in Advance"),
+                Text(
+                    orderSummary['advance_amount'] is double
+                        ? '₹ ${orderSummary['advance_amount']!.toInt()}/-'
+                        : '₹ ${orderSummary['advance_amount']?.toString() ?? 'N/A'}/-',
+                    style: AppTheme.theme.textTheme.bodySmall),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Divider(
+                color: Colors.grey,
+                thickness: 1.5,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Remaining Amount"),
+                Text(
+                  orderSummary['pending_amount'] is double
+                      ? '₹ ${orderSummary['pending_amount']!.toInt()}/-'
+                      : '₹ ${orderSummary['pending_amount']?.toString() ?? 'N/A'}/-',
+                  style: AppTheme.theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Divider(
+                color: Colors.grey,
+                thickness: 1.5,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Transaction Date"),
+                Text(orderSummary['transcation_date_time'] ?? '',
+                    style: AppTheme.theme.textTheme.bodySmall)
               ],
             ),
             cspacingHeight(sH * 0.16),
-            cBorderBtn("View Receipt"),
+            cBorderBtn("View Receipt", () {
+              Get.to(() => OrderReceiptScreen());
+            }),
             Spacing.v15,
             Spacing.v10,
             cBtn("Print Receipt", () => null, Colors.white)

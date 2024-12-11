@@ -91,15 +91,11 @@ class PreviewOrderScreen extends StatelessWidget {
               cspacingHeight(sH * 0.06),
               cBtn(
                 "Place Order",
-                () {
+                () async {
                   print("InititalCartItem IN UI:: $finalCartItems");
 
                   print("InititalCartItem IN UI:: ${finalCartItems.length}");
-                  print("ORDERDATA IN UI:: $orderData");
-
-                  print("ORDERDATA IN UI:: ${orderData.length}");
-                  Get.to(() =>
-                      AddAddressScreen(totalAmount: controller.totalAmount));
+                  await controller.storeCartItemsInDBAndPlaceOrder();
                 },
                 AppTheme.theme.scaffoldBackgroundColor,
               ),

@@ -50,6 +50,8 @@ class CreateOrderController extends GetxController {
       'address': addressController.text,
       'ref_name': refNameController.text,
       'ref_number': refMobController.text,
+      'return_date': returnDateController.text,
+      'delivery_date': deliveryDateController.text,
     };
 
     try {
@@ -63,7 +65,7 @@ class CreateOrderController extends GetxController {
 
       final AddItemOrderController addItemInOrderController =
           Get.put(AddItemOrderController());
-      addItemInOrderController.setCustomerData(customerData);
+      addItemInOrderController.setCustomerData(result);
 
       showSuccessSnackbar("Success", "Customer data saved successfully!");
       Get.to(() => AddItemInOrderScreen(
