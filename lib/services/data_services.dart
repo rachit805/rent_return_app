@@ -70,6 +70,7 @@ class DatabaseHelper {
       await db.execute('''
       CREATE TABLE mastercarddetail(
         sku_id INTEGER,
+        sku_name TEXT,
         category_name TEXT,
         item_name TEXT,
         item_id INTEGER,         
@@ -85,6 +86,8 @@ class DatabaseHelper {
       CREATE TABLE slavecarddetail (
         history_id PRIMARY KEY,
         sku_id INTEGER,
+        
+        sku_name TEXT,
         category_id INTEGER,
         category_name TEXT,
         item_name TEXT,
@@ -134,6 +137,7 @@ class DatabaseHelper {
     "delivery_date" TEXT,
     "return_date" TEXT,
     "customer_id" INTEGER,
+    "status" TEXT,
     FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
     
     FOREIGN KEY(order_id) REFERENCES order_summary(order_id),
@@ -156,6 +160,7 @@ class DatabaseHelper {
     "return_date" DATE,
     "advance_amount" REAL,
     "pending_amount" REAL,
+    "status" TEXT,
     
     FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
     FOREIGN KEY(order_id) REFERENCES cart_items_data(order_id),
@@ -165,77 +170,180 @@ class DatabaseHelper {
     });
   }
 
-  Future<Map<String, dynamic>?> insertOrderSummary(
-    Map<String, dynamic> orderSummary) async {
-  final db = await database;
-
-  try {
-    // Insert the order summary and get the inserted row ID
-    int insertedId = await db.insert(
-      'order_summary',
-      orderSummary,
-      conflictAlgorithm: ConflictAlgorithm.replace,
+// Update masterCrad quantity
+  Future<void> updateMasterCardQty(
+    int remainingQty,
+    String category,
+    String item,
+    String size,
+  ) async {
+    print(
+        "MASTERCARD IN UPDATATION IN DB>> $remainingQty AND $category$item$size ");
+    final db = await database;
+    db.update(
+      'mastercarddetail',
+      {'total_quantity': remainingQty},
+      where: 'category_name = ? AND item_name = ? AND size_name = ?',
+      whereArgs: [category, item, size],
     );
-
-    // Retrieve the inserted row using the inserted ID
-    final result = await db.query(
-      'order_summary',
-      where: 'id = ?',
-      whereArgs: [insertedId],
-      limit: 1,
-    );
-
-    if (result.isNotEmpty) {
-      print('Inserted Order Summary: ${result.first}');
-      return result.first; // Return the inserted data
-    } else {
-      print('Failed to retrieve the Order Summary.');
-      throw Exception('Order Summary retrieval failed.');
-    }
-  } catch (e) {
-    print('Error inserting Order Summary or retrieving the inserted data: $e');
-    throw e; // Re-throw the error to stop navigation in case of failure
   }
-}
 
+// Update SKU quantity
+  Future<void> updateSkuQty(int remainingQty, String skuName) async {
+    print("IN UPDATATION IN DB>> ${remainingQty} AND ${skuName} ");
+    final db = await database;
+    db.update(
+      'sku',
+      {'quantity': remainingQty},
+      where: 'sku_name = ?',
+      whereArgs: [skuName],
+    );
+  }
 
-  Future<Map<String, dynamic>?> insertCartItem(
-      Map<String, dynamic> cartItem) async {
+  // Fetch order summary
+  Future<List<Map<String, dynamic>>> getOrderSummary() async {
+    final db = await database;
+    return await db.query('order_summary');
+  }
+
+  ///// GET CART DATA DYNAMIC WAY :::
+  Future<List<Map<String, Object?>>> getCartData(
+      String columnName, List<Object?> whereArgs) async {
     final db = await database;
 
     try {
-      // Insert the cart item and get the inserted row ID
+      print("Querying $columnName with whereArgs: $whereArgs");
+      final data = await db.query(
+        'cart_items_data',
+        where: '$columnName = ?',
+        whereArgs: whereArgs,
+      );
+      print("Fetched Cart Data: $columnName = $whereArgs: $data");
+      return data;
+    } catch (e) {
+      print('Error fetching cart data by $columnName: $e');
+      throw Exception('Database query failed');
+    }
+  }
+
+  Future<List<Map<String, Object?>>> getCartDataByOrderId(
+      String orderID) async {
+    final db = await database;
+
+    try {
+      final data = await db.query(
+        'cart_items_data',
+        where: 'order_id = ?',
+        whereArgs: [orderID],
+      );
+      print("Fetched Cart Data for OrderID $orderID: $data");
+      return data;
+    } catch (e) {
+      print('Error fetching cart data by orderId: $e');
+      throw e;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> insertOrderSummary(
+      Map<String, dynamic> orderSummary) async {
+    final db = await database;
+
+    try {
+      // Insert the order summary and get the inserted row ID
+      int insertedId = await db.insert(
+        'order_summary',
+        orderSummary,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      final result = await db.query(
+        'order_summary',
+        where: 'order_id = ?',
+        whereArgs: [orderSummary["order_id"]],
+      );
+
+      if (result.isNotEmpty) {
+        print('Inserted Order Summary DB: $result');
+        return result;
+      } else {
+        print('Failed to retrieve the Order Summary.');
+        throw Exception('Order Summary retrieval failed.');
+      }
+    } catch (e) {
+      print(
+          'Error inserting Order Summary or retrieving the inserted data: $e');
+      throw e; // Re-throw the error to stop navigation in case of failure
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> insertCartItem(
+      Map<String, dynamic> cartItem, String orderID) async {
+    final db = await database;
+    try {
       int insertedId = await db.insert(
         'cart_items_data',
         cartItem,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-
-      // Retrieve the inserted row using the inserted ID
       final result = await db.query(
         'cart_items_data',
-        where: 'cart_id = ?',
-        whereArgs: [insertedId],
-        limit: 1,
+        where: 'order_id = ?',
+        whereArgs: [orderID],
       );
-
-      // Return the inserted data
       if (result.isNotEmpty) {
-        return result.first;
+        print("INSERTED CART ITEM DATA IN DB::: $result");
+        print("INSERTED CART ITEM DATA IN DB::: ${result.length}");
+
+        return result;
       } else {
-        print('Failed to retrieve the inserted cart item.');
+        print('Failed to retrieve the inserted cart items.');
         return null;
       }
     } catch (e) {
-      print('Error inserting cart item or retrieving the inserted data: $e');
+      print('Error inserting cart item or retrieving the data: $e');
       return null;
     }
   }
 
-  Future<List<Map<String, Object?>>> getCartItemsData() async {
+  Future<List<Map<String, Object?>>> getOrderedItemsDataById(
+      String orderId) async {
     final db = await database;
 
-    return db.query("cart_items_data");
+    return db
+        .query("cart_items_data", where: 'order_id = ?', whereArgs: [orderId]);
+  }
+
+  Future<void> updateOrderedItemStatus(orderId) async {
+    try {
+      final db = await database;
+
+      await db.update(
+        "cart_items_data",
+        {"status": "Return"},
+        where: "order_id = ?",
+        whereArgs: [orderId],
+      );
+
+      // print("Item with ID ${item['id']} status updated to 'Return'.");
+    } catch (e) {
+      print("Error updating item status: $e");
+    }
+  }
+Future<void> updateOrderedSummmaryStatus(orderId) async {
+    try {
+      final db = await database;
+
+      await db.update(
+        "order_summary",
+        {"status": "Return"},
+        where: "order_id = ?",
+        whereArgs: [orderId],
+      );
+
+      // print("Item with ID ${item['id']} status updated to 'Return'.");
+    } catch (e) {
+      print("Error updating item status: $e");
+    }
   }
 
   Future<Map<String, dynamic>> insertCustomerAndReturnDetails(
@@ -285,14 +393,11 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Map<String, Object?>>> getUserDataByMobile(
-      String mobileNumber) async {
-    final db = await database;
-    return await db.query(
-      'customer_data',
-      where: 'mob_number = ?',
-      whereArgs: [mobileNumber],
-    );
+  Future<Map<String, dynamic>?> getCustomerDataById(String customerId) async {
+    final db = await database; // Assume your DB instance is defined
+    final result = await db.query('customer_data',
+        where: 'customer_id = ?', whereArgs: [customerId]);
+    return result.first;
   }
 
   Future<List<Map<String, Object?>>> getAllCustomersData() async {

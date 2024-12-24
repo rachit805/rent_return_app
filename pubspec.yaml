@@ -22,33 +22,36 @@ dependencies:
   intl: ^0.19.0
   pdf: ^3.11.1
   printing: ^5.12.0
+  carousel_slider: ^5.0.0
+  image_picker: ^1.0.8
+  google_mobile_ads: ^4.0.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+flutter_launcher_icons:  
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"  
+flutter_native_splash:
+  color: "#ffffff" # Background color for splash screen
+  image: assets/images/logo.png # Path to your logo
+  android: true
+  ios: true
+  remove_alpha_ios: true
+    
   flutter_test:
     sdk: flutter
   sqflite_common_ffi: ^2.0.0+1
-  
-
   flutter_lints: ^2.0.0
+  icons_launcher: ^3.0.0
 
 flutter:
-
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
-  #   - images/a_dot_ham.jpeg
-  # example:
-  # fonts:
-    # - family: Roboto
-      # fonts:
-        # - asset: assets/fonts/Roboto-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  
+    - assets/images/logo.png
+
+icons_launcher:
+  image_path: "assets/images/logo.png"
+  android: true
+  ios: true

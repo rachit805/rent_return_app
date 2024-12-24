@@ -110,7 +110,9 @@ class PreviewOrderScreen extends StatelessWidget {
                     itemCount: controller.cartItems.length,
                     itemBuilder: (context, index) {
                       final item = controller.cartItems[index];
-                      return cartItemCard(item, index, context);
+
+                      print(" ADDED ITEM >>>$item");
+                      return cartItemCard(item, index, context, controller);
                     },
                   );
                 }),
@@ -122,8 +124,8 @@ class PreviewOrderScreen extends StatelessWidget {
     );
   }
 
-  Widget cartItemCard(
-      Map<String, dynamic> item, int index, BuildContext context) {
+  Widget cartItemCard(Map<String, dynamic> item, int index,
+      BuildContext context, AddItemOrderController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Card(
@@ -134,7 +136,7 @@ class PreviewOrderScreen extends StatelessWidget {
           child: Row(
             children: [
               Image.asset(
-                item['image'] ?? "assets/images/chair.png",
+                "assets/images/chair.png",
                 width: 80,
                 height: 80,
                 fit: BoxFit.fill,
@@ -143,9 +145,19 @@ class PreviewOrderScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item['item'] ?? "Item Name",
-                    style: AppTheme.theme.textTheme.labelMedium,
+                  Row(
+                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        item['item'] ?? "Item Name",
+                        style: AppTheme.theme.textTheme.labelMedium,
+                      ),
+                      Spacing.h20,
+                      Text(
+                        item['size'] ?? "size",
+                        style: AppTheme.theme.textTheme.labelMedium,
+                      ),
+                    ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
@@ -193,7 +205,7 @@ class PreviewOrderScreen extends StatelessWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: item["totalItemRent"].toStringAsFixed(0),
+                          text: item["totalItemRent"].toString(),
                           style: AppTheme.theme.textTheme.labelMedium?.copyWith(
                             fontSize: 22,
                             fontWeight: FontWeight.w500,

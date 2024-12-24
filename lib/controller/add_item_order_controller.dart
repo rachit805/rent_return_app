@@ -1,10 +1,11 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/services/data_services.dart';
 import 'package:rent_and_return/ui/orders/add_address_screen.dart';
 import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
-import 'package:sqflite/sqflite.dart';
 
 class AddItemOrderController extends GetxController {
   @override
@@ -19,10 +20,10 @@ class AddItemOrderController extends GetxController {
   RxString selectedCategory = ''.obs;
   RxList<String> items = <String>["Select Item"].obs;
   RxString selectedItem = ''.obs;
-
+  RxInt availableQty = 0.obs;
   RxList<String> sizes = <String>["Select Size"].obs;
   RxString selectedSize = ''.obs;
-
+  RxInt remainingQty = 0.obs;
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController itemController = TextEditingController();
   final TextEditingController sizeController = TextEditingController();
@@ -38,19 +39,32 @@ class AddItemOrderController extends GetxController {
   RxInt currentItemIndex = 0.obs;
   DatabaseHelper dbHelper = DatabaseHelper();
   var customerData = <String, dynamic>{}.obs;
-  final RxList<Map<String, dynamic>> cartItems = <Map<String, dynamic>>[].obs;
   final RxString orderid = ''.obs;
   final RxInt customerId = 0.obs;
   final RxString cartId = ''.obs;
   final RxString returnDate = ''.obs;
   final RxString deliveryDate = ''.obs;
-
+  final RxList<Map<String, dynamic>> cartItems = <Map<String, dynamic>>[].obs;
+  final RxString skuname = ''.obs;
+  final RxString scategory = ''.obs;
+  final RxString sitem = ''.obs;
+  final RxString ssize = ''.obs;
   Future<void> storeCartItemsInDBAndPlaceOrder() async {
     for (var cartItem in cartItems) {
-      final orderId =
-          "${customerData['mob_number']}_${DateTime.now().millisecondsSinceEpoch}";
+      // final orderId =
+      //     "${customerData['customer_id']}_${cartItems.length}_${DateTime.now().millisecondsSinceEpoch}";
+
+      skuname.value =
+          "${cartItem['category']}_${cartItem['item']}_${cartItem['size']}";
+      scategory.value = cartItem['category'];
+      sitem.value = cartItem['item'];
+      ssize.value = cartItem['size'];
+      final parentOrderId =
+          "${customerData['customer_id']}_${DateTime.now().day}${DateTime.now().month}${DateTime.now().year}_${DateTime.now().hour}:${DateTime.now().minute}";
+
       final cartItemData = {
-        'sku_name': cartItem['item'],
+        'sku_name':
+            "${cartItem['category']}_${cartItem['item']}_${cartItem['size']}",
         'quantity': cartItem['quantity'],
         'buy_price': cartItem['price'],
         'rent_price': cartItem['rentPrice'],
@@ -58,23 +72,32 @@ class AddItemOrderController extends GetxController {
         'delivery_date': cartItem['deliveryDate'],
         'return_date': customerData['return_date'] ?? '',
         'customer_id': customerData['customer_id'] ?? 0,
-        'order_id': orderId,
+        'order_id': parentOrderId,
         'image': cartItem['image'] ?? '',
+        'status': "Active",
       };
 
       try {
-        // Insert cart item and get the inserted data
-        final insertedData = await dbHelper.insertCartItem(cartItemData);
+        ///// Problem is here [I/flutter (26731): IN UPDATATION IN DB>> 50 AND __ ]
+        ///HOW TO GET HERE SKU_NAME
+        print("REMAING QTY ON ORDER PLCING >> $remainingQty");
+        final insertedData =
+            await dbHelper.insertCartItem(cartItemData, parentOrderId);
+        // final String skuName =
+        //     "${selectedCategory.value}_${selectedItem.value}_${selectedSize.value}";
+        await dbHelper.updateSkuQty(remainingQty.value, skuname.value);
+        await dbHelper.updateMasterCardQty(
+            remainingQty.value, scategory.value, sitem.value, ssize.value);
+        print("REMAINING QTY>> $remainingQty");
 
-        // Print the inserted data
         if (insertedData != null) {
-          customerId.value = insertedData['customer_id'];
-          orderid.value = insertedData['order_id'];
-          cartId.value = insertedData['cart_id'].toString();
-          returnDate.value = insertedData['return_date'];
-          deliveryDate.value = insertedData['delivery_date'];
+          itemsData.value = insertedData;
+          customerId.value = insertedData.first['customer_id'] ?? '';
+          orderid.value = insertedData.first['order_id'] ?? '';
+          returnDate.value = insertedData.first['return_date'] ?? '';
+          deliveryDate.value = insertedData.first['delivery_date'] ?? '';
 
-          print('Inserted cart item DATA>>>> $insertedData');
+          // print('Inserted cart item DATA>>>> $insertedData');
           Get.to(() => AddAddressScreen(totalAmount: totalAmount));
         } else {
           print('Failed to insert cart item.');
@@ -94,12 +117,9 @@ class AddItemOrderController extends GetxController {
     customerData.value = data;
   }
 
-  // Refresh cart items (can fetch from API if needed)
   Future<void> refreshCartItems() async {
-    // Simulate fetching updated data
     await Future.delayed(const Duration(seconds: 1));
-    // Update with a refreshed list (example update logic)
-    cartItems.refresh(); // Notify listeners explicitly
+    cartItems.refresh();
   }
 
   void removeItem(int index) {
@@ -108,24 +128,10 @@ class AddItemOrderController extends GetxController {
       itemsData.removeAt(index);
       currentItemIndex.value = itemsData.length; // Update the current index
 
-      calculateTotalAmount(); // Recalculate total amount
+      calculateTotalAmount();
       print("REMOVED INDEX :: $index");
     }
   }
-
-  // void removeItem(int index) {
-  //   if (index >= 0 && index < cartItems.length) {
-  //     // Remove the item from the local list
-  //     itemsData.removeAt(index);
-  //     currentItemIndex.value = itemsData.length; // Update the current index
-  //     calculateTotalAmount(); // Recalculate total amount
-
-  //     // Persist the updated items list to the database
-  //     // dbHelper.saveItems(itemsData); // Example function to save items
-  //     print(" ITem IS REmovesd ::: $index");
-  //     Get.snackbar("Success", "Item removed successfully!");
-  //   }
-  // }
 
   var totalAmount = 0.0.obs;
   void calculateTotalAmount() {
@@ -149,13 +155,6 @@ class AddItemOrderController extends GetxController {
   }
 
   Future<void> fetchItems(String categoryName) async {
-    // if (categoryName == "Select Category" || categoryName.isEmpty) {
-    //   items.value = ["Select Item"];
-    //   selectedItem.value = "Select Item";
-    //   sizes.value = ["Select Size"];
-    //   return;
-    // }
-
     try {
       final List<Map<String, dynamic>> categoryData =
           await dbHelper.getCategoryByName(categoryName);
@@ -217,7 +216,7 @@ class AddItemOrderController extends GetxController {
         selectedSize.value == "Select Size") {
       priceController.clear();
       rentpriceController.clear();
-      return; // Do not show an error, just exit
+      return;
     }
 
     final String skuName =
@@ -231,8 +230,10 @@ class AddItemOrderController extends GetxController {
         final double buyPrice = skuData.first['purchase_price'];
         final double rentPrice = skuData.first['rent_price'];
         priceController.text = buyPrice.toStringAsFixed(1);
-
         rentpriceController.text = rentPrice.toStringAsFixed(1);
+        final int qty = skuData.first['quantity'];
+        availableQty.value = qty;
+        // print("finalAvQty>> ${finalAvQty(qty)}");
       } else {
         priceController.clear();
         rentpriceController.clear();
@@ -276,12 +277,19 @@ class AddItemOrderController extends GetxController {
       'quantity': quantity,
       'deliveryDate': deliverydateController.text,
       'totalItemRent': totalItemRent,
+      'status': "Active",
     };
 
     if (currentItemIndex.value < itemsData.length) {
       itemsData[currentItemIndex.value] = currentItem;
     } else {
-      itemsData.add(currentItem);
+      try {
+        // print("Available Item DATA >> $itemsData");
+        // print("Available CART ITEM >> $cartItems");
+        itemsData.add(currentItem);
+      } catch (e) {
+        print("Error in ADDING IN ITEMDATA:: $e");
+      }
     }
 
     currentItemIndex.value++;
@@ -297,7 +305,6 @@ class AddItemOrderController extends GetxController {
     }
   }
 
-// Validate required fields
   bool _validateFields() {
     return selectedCategory.value.isNotEmpty &&
         selectedCategory.value != "Select Category" &&
@@ -327,8 +334,8 @@ class AddItemOrderController extends GetxController {
       quantityController.text = (currentItem['quantity'] ?? 0).toString();
       rentpriceController.text = currentItem['rentPrice']?.toString() ?? '';
       deliverydateController.text = currentItem['deliveryDate'] ?? '';
+      // 'status': "Active",
     } else {
-      // Reset fields if no data exists for the current index
       selectedCategory.value = '';
       selectedItem.value = '';
       selectedSize.value = '';
@@ -339,32 +346,40 @@ class AddItemOrderController extends GetxController {
     }
   }
 
-// // Method to calculate the total amount
-//   void calculateTotalAmount() {
-//     final double total = itemsData.fold(0.0, (sum, item) {
-//       return sum + (item['quantity'] * item['price']);
-//     });
-//     totalAmount.value = total;
-//   }
+  Future<void> previewOrder() async {
+    // Parse the entered quantity from the TextEditingController
+    final enteredQty = int.tryParse(quantityController.text) ?? 0;
 
-  Future<void> previweOrder() async {
+    // Check if available quantity is less than 1 or entered quantity exceeds available quantity
+    if (availableQty < 1) {
+      showErrorSnackbar("Error", "This stock is Empty");
+      return;
+    } else if (enteredQty > availableQty.value) {
+      showErrorSnackbar("Error", "Entered quantity exceeds available stock");
+      return;
+    }
+
+    // Validate fields and proceed if valid
     if (_validateFields()) {
-      saveCurrentItem();
-      loadCurrentItem();
+      saveCurrentItem(); // Save the current item details
+      loadCurrentItem(); // Load the current item for processing
       calculateTotalAmount(); // Ensure total amount is updated
+
+      // Prepare order data for preview
       final orderData = {
         'customerName': customerData['customer_name'] ?? '',
         'customerMobile': customerData['mob_number'] ?? '',
         'items': itemsData,
-        "total_amount": totalAmount.value, // Use totalAmount
+        "total_amount": totalAmount.value,
         "cart_id": "cartID",
       };
-      print("Order placed: $orderData");
+      print("Order placed in local List: $orderData");
+
+      // Navigate to the order preview screen with arguments
       Get.to(() => PreviewOrderScreen(), arguments: {
         "cart_items": itemsData,
-        "total_amount": totalAmount.value, // Pass updated totalAmount
+        "total_amount": totalAmount.value,
       });
-      // Get.snackbar("Success", "Order preview is ready!");
     } else {
       showErrorSnackbar("Error", "Fill all the Item Details");
     }

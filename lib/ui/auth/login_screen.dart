@@ -16,7 +16,6 @@ class LogInScreen extends StatelessWidget {
     double sH = MediaQuery.of(context).size.height;
     double sW = MediaQuery.of(context).size.width;
 
-    // Detect the height of the keyboard
     double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     bool isKeyboardOpen = keyboardHeight > 0;
 
@@ -43,10 +42,7 @@ class LogInScreen extends StatelessWidget {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: sW * 0.05),
                     child: AnimatedContainer(
-                      height: isKeyboardOpen
-                          ? sH * 0.2
-                          : sH *
-                              0.35, // Change the image height when keyboard is open
+                      height: isKeyboardOpen ? sH * 0.2 : sH * 0.35,
                       duration: Duration.zero,
                       child: Image.asset(
                         "$imagepath/auth.png",
@@ -54,12 +50,7 @@ class LogInScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(
-                      height: isKeyboardOpen
-                          ? sH * 0.05
-                          : sH * 0.1), // Adjust spacing when keyboard is open
-
-                  // Company name form field
+                  SizedBox(height: isKeyboardOpen ? sH * 0.05 : sH * 0.1),
                   CTextformfield(
                     controller: controller.cnameController,
                     label: cnameTxtformfieldLabel,
@@ -77,7 +68,8 @@ class LogInScreen extends StatelessWidget {
                   ),
 
                   // Login button
-                  cbottomButton(loginbtnLabel, () => controller.sendOTP(), AppTheme.theme.scaffoldBackgroundColor),
+                  cbottomButton(loginbtnLabel, () => controller.sendOTP(),
+                      AppTheme.theme.scaffoldBackgroundColor),
                   Spacing.v20,
                 ],
               ),

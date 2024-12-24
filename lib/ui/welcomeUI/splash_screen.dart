@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rent_and_return/controller/login_controller.dart';
 import 'package:rent_and_return/controller/splash_controller.dart';
 
 import 'package:rent_and_return/utils/strings.dart';

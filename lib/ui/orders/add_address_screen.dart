@@ -23,12 +23,12 @@ class AddAddressScreen extends StatelessWidget {
     final AddAddressController controller = Get.put(
       AddAddressController(totalAmountValue: totalAmount.value),
     );
-    double sH = MediaQuery.of(context).size.height;
+    double sH = MediaQuery.of(context).size.height; 
     double sW = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(70),
-          child: cAppbar2("Place Order")),
+          child: cAppbar2("Place Order", (){ })),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(

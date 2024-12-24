@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
-import 'package:rent_and_return/controller/login_controller.dart';
 import 'package:rent_and_return/controller/otp_verification_controller.dart';
-import 'package:rent_and_return/ui/auth/login_screen.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 import 'package:rent_and_return/ui/welcomeUI/onboarding_screen.dart';
 

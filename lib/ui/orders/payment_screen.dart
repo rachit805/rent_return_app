@@ -23,7 +23,9 @@ class PaymentScreen extends StatelessWidget {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
-        child: cAppbar2("Payment"),
+        child: cAppbar2("Payment", () {
+          Get.back();
+        }),
       ),
       body: Stack(
         children: [

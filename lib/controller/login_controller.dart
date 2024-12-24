@@ -1,11 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:rent_and_return/ui/auth/otp_verification_screen.dart';
-import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
-import 'package:uuid/uuid.dart';
 
 class LoginController extends GetxController {
   final TextEditingController cnameController = TextEditingController();
@@ -18,7 +15,6 @@ class LoginController extends GetxController {
 
   FirebaseAuth auth = FirebaseAuth.instance;
   
-  // Function to send OTP
   void sendOTP() async {
     if (cnameController.text.isEmpty) {
       showErrorSnackbar("Error", "Please enter company name");
@@ -35,7 +31,6 @@ class LoginController extends GetxController {
         phoneNumber: "+91${phoneController.text}",
         timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-retrieval of OTP, if completed
           await auth.signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
@@ -57,7 +52,6 @@ class LoginController extends GetxController {
     }
   }
 
-  // Function to verify OTP
   Future<void> verifyOTP(String otp) async {
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(

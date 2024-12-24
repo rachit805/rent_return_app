@@ -13,7 +13,26 @@ class AddItemInOrderScreen extends StatelessWidget {
   final String cname;
   final String mob;
   Future<void> refreshData() async {
-    await Future.delayed(const Duration(seconds: 1));
+    // Clear selected data
+    controller.selectedCategory.value = '';
+    controller.selectedItem.value = '';
+    controller.selectedSize.value = '';
+
+    // Clear input fields
+    controller.quantityController.clear();
+    controller.priceController.clear();
+    controller.rentpriceController.clear();
+    controller.deliverydateController.clear();
+
+    // Reset current item index
+    // controller.currentItemIndex.value = 0;
+
+    // Clear dropdown lists
+    // controller.categories.clear();
+    // controller.items.clear();
+    // controller.sizes.clear();
+
+    // Re-fetch categories
     await controller.fetchCategories();
   }
 
@@ -132,11 +151,24 @@ class AddItemInOrderScreen extends StatelessWidget {
                           underlineColor: Colors.black87,
                         )),
 
-                    buildTextField(controller.quantityController, "Quantity",
-                        'Enter Quantity', false),
+                    buildQtyTextField(
+                      controller.quantityController,
+                      "Quantity",
+                      'Enter Quantity',
+                      false,
+                      (input) {
+                        final enteredQty = int.tryParse(input) ?? 0;
+
+                        final remainingQty =
+                            controller.availableQty.value - enteredQty;
+
+                        controller.remainingQty.value = remainingQty;
+                        return "Remaining Qty: ${controller.remainingQty.value}";
+                      },
+                    ),
 
                     buildTextField(controller.priceController,
-                        "Price (per item)", '', true),
+                        "Price (per item)", '', true, ''),
                     const Text(
                       "In-Case if items are Lost Consumers are Solely Responsible for refunds.",
                       textAlign: TextAlign.left,
@@ -144,8 +176,8 @@ class AddItemInOrderScreen extends StatelessWidget {
                         fontSize: 10,
                       ),
                     ),
-                    buildTextField(
-                        controller.rentpriceController, "Rent Price", '', true),
+                    buildTextField(controller.rentpriceController, "Rent Price",
+                        '', true, ''),
                     buildDatePickerField(controller.deliverydateController,
                         "Delivery date", context),
                     cspacingHeight(sH * 0.05),
@@ -218,7 +250,7 @@ class AddItemInOrderScreen extends StatelessWidget {
                 ),
               ),
               cbottomButton("Preview Order", () {
-                controller.previweOrder();
+                controller.previewOrder();
               }, AppTheme.theme.scaffoldBackgroundColor),
             ],
           ),
@@ -232,7 +264,7 @@ class AddItemInOrderScreen extends StatelessWidget {
   }
 
   Widget buildTextField(TextEditingController controller, String label,
-      String? hintText, bool readOnly) {
+      String? hintText, bool readOnly, String? aQty) {
     return TextFormField(
       controller: controller,
       autofocus: false,
@@ -242,6 +274,35 @@ class AddItemInOrderScreen extends StatelessWidget {
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15),
         labelText: label,
         hintText: hintText,
+        suffix: Text(aQty ?? ''),
+        enabledBorder: const UnderlineInputBorder(),
+      ),
+    );
+  }
+
+  ///
+  Widget buildQtyTextField(
+    TextEditingController controller,
+    String label,
+    String? hintText,
+    bool readOnly,
+    String? Function(String)
+        getSuffixText, // A function to dynamically generate the suffix
+  ) {
+    return TextFormField(
+      controller: controller,
+      autofocus: false,
+      readOnly: readOnly,
+      onChanged: (value) {
+        // Trigger the state update on change
+        getSuffixText(value);
+      },
+      decoration: InputDecoration(
+        labelStyle: AppTheme.theme.textTheme.headlineLarge?.copyWith(
+            fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15),
+        labelText: label,
+        hintText: hintText,
+        suffix: Obx(() => Text("${getSuffixText(controller.text)}")),
         enabledBorder: const UnderlineInputBorder(),
       ),
     );

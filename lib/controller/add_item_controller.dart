@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:rent_and_return/services/data_services.dart';
 import 'package:rent_and_return/ui/inventory/home_screen.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
 
 class AddItemController extends GetxController {
+  @override
+  void onInit() {
+    loadInterstitialAd();
+    super.onInit();
+  }
+
   final DatabaseHelper dbHelper = DatabaseHelper();
 
   // Dropdown Data
@@ -18,14 +25,48 @@ class AddItemController extends GetxController {
   RxList<String> sizes = <String>[].obs;
   RxString selectedSize = ''.obs;
 
-  // Text Field Controllers
-  // TextEditingController categoryNameController = TextEditingController();
-  // TextEditingController itemNameController = TextEditingController();
-  // TextEditingController sizeNameController = TextEditingController();
-
   TextEditingController quantityController = TextEditingController();
   TextEditingController purchasePriceController = TextEditingController();
   TextEditingController rentPriceController = TextEditingController();
+
+  InterstitialAd? interstitialAd;
+  RxBool isLoaded = false.obs;
+
+  void loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: "ca-app-pub-2514113084570130/7674595051",
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          isLoaded.value = true;
+          interstitialAd = ad;
+
+          interstitialAd?.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              Get.offAll(() => Homepage());
+              ad.dispose();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              Get.offAll(() => Homepage());
+              ad.dispose();
+            },
+          );
+        },
+        onAdFailedToLoad: (error) {
+          print("Failed to load interstitial ad: ${error.message}");
+        },
+      ),
+    );
+  }
+
+  void showInterstitialAd() {
+    if (isLoaded.value && interstitialAd != null) {
+      interstitialAd!.show();
+    } else {
+      print("Ad not ready, navigating directly.");
+      Get.to (() => Homepage());
+    }
+  }
 
   void debugPrintDatabase() async {
     final dbHelper = DatabaseHelper(); // Create an instance of DatabaseHelper
@@ -190,9 +231,11 @@ class AddItemController extends GetxController {
 
       await dbHelper.insertSku(newSku);
       final String skuId = '${categoryUid}_${itemId}_$sizeId';
-
+      final String skuName =
+          '${selectedCategory.value}_${selectedItem.value}_${selectedSize.value}';
       final slaveData = {
         'sku_id': skuId,
+        'sku_name': skuName,
         'category_id': categoryUid,
         'item_id': itemId,
         'size_id': sizeId,
@@ -210,9 +253,13 @@ class AddItemController extends GetxController {
       // Update existing SKU's version and add data to slavecarddetail
       final newVersion = existingSku['version'] + 1;
       await dbHelper.updateSkuVersion(categoryUid, itemId, sizeId, newVersion);
+      final String skuName =
+          '${selectedCategory.value}_${selectedItem.value}_${selectedSize.value}';
+
       final String skuId = '${categoryUid}_${itemId}_$sizeId';
       final slaveData = {
         'sku_id': skuId,
+        'sku_name': skuName,
         'category_id': categoryUid,
         'item_id': itemId,
         'size_id': sizeId,
@@ -236,7 +283,7 @@ class AddItemController extends GetxController {
     purchasePriceController.clear();
     rentPriceController.clear();
 
-    Get.off(() => Homepage());
+    showInterstitialAd();
   }
 
   Future<int?> _getCategoryUidByName(String categoryName) async {

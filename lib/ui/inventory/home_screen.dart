@@ -13,20 +13,20 @@ import 'package:rent_and_return/widgets/c_search_bar.dart';
 import 'package:rent_and_return/widgets/c_sizedbox.dart';
 import 'package:rent_and_return/widgets/stock_indicator.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class InventoryScreen extends StatelessWidget {
+  InventoryScreen({super.key});
+  final ItemDetailController itemDetailController =
+      Get.put(ItemDetailController());
+  final InventoryController controller = Get.put(InventoryController());
 
   @override
   Widget build(BuildContext context) {
     double sW = MediaQuery.of(context).size.width;
     double sH = MediaQuery.of(context).size.height;
-    final HomeController controller = Get.put(HomeController());
-    final ItemDetailController itemDetailController =
-        Get.put(ItemDetailController());
     Future<void> refreshData() async {
       await Future.delayed(const Duration(seconds: 1));
       await controller.fetchItems();
-      await itemDetailController.calculateMasterData();
+      // await itemDetailController.calculateMasterData();
     }
 
     return Scaffold(
@@ -63,14 +63,10 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 cspacingHeight(sH * 0.05),
-                // Search Bar
                 csearchbar(sW, "Search Item"),
-
                 cspacingHeight(sH * 0.02),
                 stockIndicator(sW),
                 cspacingHeight(sH * 0.015),
-
-                // Items Grid with Pull to Refresh
                 Expanded(
                   child: Obx(() {
                     if (controller.items.isEmpty) {
@@ -150,7 +146,8 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               CircleAvatar(
-                backgroundColor: AppTheme.theme.primaryColor,
+                backgroundColor:
+                    quantity == 0 ? Colors.red : AppTheme.theme.primaryColor,
                 radius: 8,
               ),
             ],

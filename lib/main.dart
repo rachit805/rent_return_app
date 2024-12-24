@@ -1,28 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:rent_and_return/ui/auth/login_screen.dart';
-import 'package:rent_and_return/ui/auth/otp_verification_screen.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
-import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
-import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
-import 'package:rent_and_return/ui/inventory/empty_inventory_screen.dart';
-import 'package:rent_and_return/ui/inventory/item_detail_screen.dart';
-import 'package:rent_and_return/ui/orders/add_items_order.dart';
-import 'package:rent_and_return/ui/orders/all_orders_screen.dart';
-import 'package:rent_and_return/ui/orders/new_orders_screen.dart';
-import 'package:rent_and_return/ui/orders/payment_screen.dart';
-import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
-import 'package:rent_and_return/ui/welcomeUI/onboarding_screen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:rent_and_return/ui/welcomeUI/splash_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:sqflite/sqflite.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   await GetStorage.init();
 
   await Firebase.initializeApp(
