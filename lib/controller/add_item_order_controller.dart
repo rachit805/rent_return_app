@@ -75,6 +75,7 @@ class AddItemOrderController extends GetxController {
         'order_id': parentOrderId,
         'image': cartItem['image'] ?? '',
         'status': "Active",
+        "booked_date": DateTime.now().toString(),
       };
 
       try {
@@ -278,6 +279,7 @@ class AddItemOrderController extends GetxController {
       'deliveryDate': deliverydateController.text,
       'totalItemRent': totalItemRent,
       'status': "Active",
+      "booked_date": DateTime.now().toString(),
     };
 
     if (currentItemIndex.value < itemsData.length) {

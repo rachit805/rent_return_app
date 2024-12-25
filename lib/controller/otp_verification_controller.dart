@@ -74,7 +74,7 @@ final storage = GetStorage(); // GetStorage instance
   
       // Navigate to the desired screen on successful verification
       Get.offAll(() => const EmptyInventoryScreen());
-      isOTPSent.value = false; // Reset the flag after successful verification
+      isOTPSent.value = false; // Reset the flag after successful verification  
     } catch (e) {
       // Show error message for invalid OTP or other issues
       showErrorSnackbar("Error", e.toString());

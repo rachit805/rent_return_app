@@ -6,7 +6,7 @@ import 'package:rent_and_return/controller/homepage_controller.dart';
 import 'package:rent_and_return/controller/orders_controller/all_order_controller.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/dashboard_screen.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/profile_screen.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
+import 'package:rent_and_return/ui/bottom_nav_bar/inventory_screen.dart.dart';
 import 'package:rent_and_return/ui/orders/all_orders_screen.dart';
 import 'package:rent_and_return/utils/strings.dart';
 

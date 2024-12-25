@@ -1,9 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:rent_and_return/controller/home_screen_controller.dart';
 import 'package:rent_and_return/controller/item_detail_controller.dart';
-import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/action_btn.dart';
 import 'package:rent_and_return/widgets/c_appbar.dart';
@@ -81,11 +80,11 @@ class ItemDetailScreen extends StatelessWidget {
                   categoryName: categoryName,
                   itemName: itemName,
                   quantity: masterData['total_quantity'],
-                  rentPrice: masterData['avg_rent_price'],
+                  rentPrice: masterData['avg_rent_price'] ?? 0.0,
                   sH: sH,
                   sW: sW,
                   size: size,
-                  buyPrice: masterData['avg_buy_price'],
+                  buyPrice: masterData['avg_buy_price'] ?? 0.0,
                 );
               }),
               Spacing.v15,
@@ -289,37 +288,54 @@ class OrderHistoryTab extends StatelessWidget {
     BuildContext context,
   ) {
     double sW = MediaQuery.of(context).size.width;
-
+    final imageFile = item['image'] ?? null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Card(
-        elevation: 4,
+        elevation: 0.5,
         color: AppTheme.theme.scaffoldBackgroundColor,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              Image.asset(
-                "assets/images/chair.png",
-                width: 80,
-                height: 80,
-                fit: BoxFit.fill,
-              ),
-              const SizedBox(width: 15),
+              // Container(
+              //   width: 80,
+              //   height: 80,
+              //   decoration: BoxDecoration(
+              //     border: Border.all(
+              //       width: 1.5,
+              //       color: Colors.grey.shade400,
+              //     ),
+              //     borderRadius: BorderRadius.circular(20),
+              //   ),
+              //   child: (imageFile != null && imageFile is Uint8List)
+              //       ? ClipOval(
+              //           child: Image.memory(
+              //           imageFile,
+              //           fit: BoxFit.fill,
+              //         )) // Display image
+              //       : Icon(
+              //           Icons.image_not_supported,
+              //           color: Colors.black54,
+              //         ), // Placeholder if no image
+              // ),
+
+              // const SizedBox(width: 15),
               Column(
                 // mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        item['sku_name'] ?? "Item Name",
-                        style: AppTheme.theme.textTheme.labelMedium,
-                      ),
+                      Text("Booked Date: ${item['booked_date']}",
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700)),
                       // Expanded(child: SizedBox()),
                       SizedBox(
-                        width: sW * 0.07,
+                        width: 20,
                       ),
                       RichText(
                         text: TextSpan(
@@ -342,6 +358,15 @@ class OrderHistoryTab extends StatelessWidget {
                           ],
                         ),
                       ),
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: Colors.black26,
+                        child: Text(
+                          "i",
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w800),
+                        ),
+                      )
                     ],
                   ),
                   Padding(
@@ -349,7 +374,7 @@ class OrderHistoryTab extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          "Delivery: ${item['delivery_date'] ?? 'N/A'} - ${item['return_date'] ?? 'N/A'}",
+                          "Delivery Date: ${item['delivery_date'] ?? 'N/A'}",
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -359,6 +384,11 @@ class OrderHistoryTab extends StatelessWidget {
                       ],
                     ),
                   ),
+                  Text("Return Date: ${item['return_date'] ?? 'N/A'}",
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700)),
                   Row(
                     children: [
                       Container(

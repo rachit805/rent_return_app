@@ -14,105 +14,73 @@ class ItemDetailController extends GetxController {
   final RxString skuname = ''.obs;
   final RxInt placedQuantity = 0.obs;
   final RxInt addedQuantity = 0.obs;
-
+  final RxDouble lastBuyprice = 0.0.obs;
+  final RxDouble lastRentprice = 0.0.obs;
   final RxInt finalRemainingQuantity = 0.obs;
   RxList<Map<String, dynamic>> placedOrdersData = <Map<String, dynamic>>[].obs;
 
   Future<void> fetchItemsBySkuId(String skuId, String skuName) async {
-    // print("Fetching items for SKU: $skuId");
-    // print("PAssed skuName >>$skuName");
     try {
       final slavecardData = await dbHelper.getSlaveCardDetail();
-
-      ///
       final data = await dbHelper.getCartData("sku_name", [skuName]);
-      // print("Placed Data of $skuName >> ${data}");
 
-// Filter the data to include only those where status is "Active"
       final filteredData =
           data.where((item) => item['status'] == "Active").toList();
-
-// Assign the filtered data to placedOrdersData
       placedOrdersData.assignAll(filteredData);
 
-      print("Filtered Active Orders Data >> ${filteredData}");
-// print("PLACED ORDER DATA>>> $placedOrdersData");
       if (placedOrdersData.isNotEmpty) {
         for (var item in placedOrdersData) {
           placedQuantity.value = item['quantity'] ?? 0;
-          print("PLACED QUANITTY >>> ${placedQuantity.value}");
         }
       }
+
       if (slavecardData.isNotEmpty) {
         slaveCardList.value =
             slavecardData.where((item) => item['sku_id'] == skuId).toList();
         slaveCardList
             .sort((a, b) => b['added_date'].compareTo(a['added_date']));
-        for (var item in slavecardData) {
+
+        for (var item in slaveCardList) {
           addedQuantity.value = item['latest_quantity'] ?? 0;
-          print("ADDED QUANITTY >>> ${addedQuantity.value}");
         }
-        print("Filtered slaveCardList length: ${slaveCardList.length}");
+
         calculateFinalQuantity();
         calculateMasterData(skuName);
       } else {
         slaveCardList.clear();
         masterListData.clear();
-        print("No matching data for SKU: $skuId");
       }
-    } catch (e) {
+    } catch (e, stacktrace) {
       print("Error fetching items: $e");
+      print("Stacktrace: $stacktrace");
     }
   }
 
   Future<void> addMasterCard(String skuId, String skuName) async {
-    final lastMasterCard = await dbHelper.getMasterCardBySkuId(
-      skuId,
-    );
-
-    double prevBuyPrice = lastMasterCard?['avg_buy_price'] ?? 0.0;
-    double prevRentPrice = lastMasterCard?['avg_rent_price'] ?? 0.0;
-    int prevQuantity = lastMasterCard?['total_quantity'] ?? 0;
-
-    int newQuantity = int.tryParse(quantityController.text) ?? 0;
-    double newBuyPrice = double.tryParse(buypriceController.text) ?? 0.0;
-    double newRentPrice = double.tryParse(rentpriceController.text) ?? 0.0;
-
-    if (newQuantity == 0) {
-      print("Invalid new quantity, skipping update.");
-      return;
-    }
-
-    double updatedBuyPrice =
-        ((prevBuyPrice * prevQuantity) + (newBuyPrice * newQuantity)) /
-            (prevQuantity + newQuantity);
-    double updatedRentPrice =
-        ((prevRentPrice * prevQuantity) + (newRentPrice * newQuantity)) /
-            (prevQuantity + newQuantity);
-    int updatedQuantity = prevQuantity + newQuantity;
-
-    final updatedMasterCard = {
-      "sku_id": skuId,
-      "sku_name": skuName,
-      "avg_buy_price": updatedBuyPrice,
-      "avg_rent_price": updatedRentPrice,
-      "total_quantity": finalRemainingQuantity.value,
-    };
-
     try {
+      final updatedMasterCard = {
+        "sku_id": skuId,
+        "sku_name": skuName,
+        "avg_buy_price": lastBuyprice.value,
+        "avg_rent_price": lastRentprice.value,
+        "total_quantity": finalRemainingQuantity.value,
+      };
+
       await dbHelper.insertOrUpdateMasterCard(updatedMasterCard);
 
-      // Update SKU after MasterCard
       await updateSKUData(
         skuId,
-        updatedQuantity,
-        updatedBuyPrice,
-        updatedRentPrice,
+        finalRemainingQuantity.value,
+        lastBuyprice.value,
+        lastRentprice.value,
       );
 
       print("MasterCard Updated: $updatedMasterCard");
-    } catch (e) {
-      print("Error updating MasterCard: $e");
+    } catch (e, stacktrace) {
+      print("Error in addMasterCard: $e");
+      print("Stacktrace: $stacktrace");
+      showErrorSnackbar("Error", "Failed to add MasterCard: $e");
+      rethrow; // Re-throw the exception for further debugging if needed
     }
   }
 
@@ -121,10 +89,10 @@ class ItemDetailController extends GetxController {
     try {
       await dbHelper.updateSKUData(skuId, quantity, buyPrice, rentPrice);
       print("SKU Data updated for SKU: $skuId");
-      print(
-          "Updated Values: Quantity=$quantity, BuyPrice=$buyPrice, RentPrice=$rentPrice");
-    } catch (e) {
+    } catch (e, stacktrace) {
       print("Error updating SKU data: $e");
+      print("Stacktrace: $stacktrace");
+      showErrorSnackbar("Error", "Failed to update SKU data: $e");
     }
   }
 
@@ -134,45 +102,32 @@ class ItemDetailController extends GetxController {
       return;
     }
 
-    double totalBuyPrice = 0.0;
-    double totalRentPrice = 0.0;
-    int totalQuantity = 0;
-    double weightedBuyPriceSum = 0.0;
-    double weightedRentPriceSum = 0.0;
+    // Use the most recent entry for prices
+    final latestSlaveCard = slaveCardList.first;
 
-    for (var item in slaveCardList) {
-      int itemQuantity =
-          int.tryParse(item['latest_quantity']?.toString() ?? '') ?? 0;
-      double itemBuyPrice =
-          double.tryParse(item['latest_buy_price']?.toString() ?? '') ?? 0;
-      double itemRentPrice =
-          double.tryParse(item['latest_rent_price']?.toString() ?? '') ?? 0;
+    lastBuyprice.value = double.tryParse(
+            latestSlaveCard['latest_buy_price']?.toString() ?? '0.0') ??
+        0.0;
+    lastRentprice.value = double.tryParse(
+            latestSlaveCard['latest_rent_price']?.toString() ?? '0.0') ??
+        0.0;
 
-      totalQuantity += itemQuantity;
-      weightedBuyPriceSum += itemBuyPrice * itemQuantity;
-      weightedRentPriceSum += itemRentPrice * itemQuantity;
-    }
-
-    double avgBuyPrice = (weightedBuyPriceSum / totalQuantity);
-    double avgRentPrice = (weightedRentPriceSum / totalQuantity);
-
-    // Use the corrected final remaining quantity.
     masterListData.value = [
       {
-        "sku_id": slaveCardList[0]['sku_id'],
+        "sku_id": latestSlaveCard['sku_id'],
         "sku_name": skuName,
-        "avg_buy_price": avgBuyPrice,
-        "avg_rent_price": avgRentPrice,
+        "avg_buy_price": lastBuyprice.value,
+        "avg_rent_price": lastRentprice.value,
         "total_quantity": finalRemainingQuantity.value,
       }
     ];
 
     // Update SKU after MasterCard
     await updateSKUData(
-      slaveCardList[0]['sku_id'],
-      finalRemainingQuantity.value, // Corrected quantity here
-      avgBuyPrice,
-      avgRentPrice,
+      latestSlaveCard['sku_id'],
+      finalRemainingQuantity.value,
+      lastBuyprice.value,
+      lastRentprice.value,
     );
 
     print("Master Data Calculated: $masterListData");
@@ -185,6 +140,7 @@ class ItemDetailController extends GetxController {
       showErrorSnackbar("Error", "Fill All Fields");
       return;
     }
+
     final slaveData = {
       "sku_id": skuID,
       'category_id': categoryId,
@@ -196,12 +152,17 @@ class ItemDetailController extends GetxController {
       'status': 'active',
       'added_date': DateTime.now().toIso8601String(),
     };
+
     try {
+      lastBuyprice.value = double.tryParse(buypriceController.text) ?? 0.0;
+      lastRentprice.value = double.tryParse(rentpriceController.text) ?? 0.0;
       await addMasterCard(skuID, skuname.value);
+      await dbHelper.insertSlaveCard(slaveData);
 
       buypriceController.clear();
       quantityController.clear();
       rentpriceController.clear();
+
       Get.back();
       Get.snackbar(
         'Success',
@@ -211,13 +172,13 @@ class ItemDetailController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-      await dbHelper.insertSlaveCard(slaveData);
-    } catch (e) {
+    } catch (e, stacktrace) {
       print("Error adding stock: $e");
+      print("Stacktrace: $stacktrace");
 
       Get.snackbar(
         'Error',
-        e.toString(),
+        'Failed to add stock: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -227,19 +188,26 @@ class ItemDetailController extends GetxController {
   }
 
   void calculateFinalQuantity() {
-    int totalAddedQuantity = slaveCardList.fold(
-      0,
-      (sum, item) =>
-          sum + (int.tryParse(item['latest_quantity']?.toString() ?? '0') ?? 0),
-    );
-    int totalPlacedQuantity = placedOrdersData.fold(
-      0,
-      (sum, item) =>
-          sum + (int.tryParse(item['quantity']?.toString() ?? '0') ?? 0),
-    );
-    finalRemainingQuantity.value = totalAddedQuantity - totalPlacedQuantity;
+    try {
+      int totalAddedQuantity = slaveCardList.fold(
+        0,
+        (sum, item) =>
+            sum +
+            (int.tryParse(item['latest_quantity']?.toString() ?? '0') ?? 0),
+      );
+      int totalPlacedQuantity = placedOrdersData.fold(
+        0,
+        (sum, item) =>
+            sum + (int.tryParse(item['quantity']?.toString() ?? '0') ?? 0),
+      );
 
-    print(
-        "Calculated Final Remaining Quantity >>> ${finalRemainingQuantity.value}");
+      finalRemainingQuantity.value = totalAddedQuantity - totalPlacedQuantity;
+
+      print(
+          "Calculated Final Remaining Quantity >>> ${finalRemainingQuantity.value}");
+    } catch (e, stacktrace) {
+      print("Error calculating final quantity: $e");
+      print("Stacktrace: $stacktrace");
+    }
   }
 }

@@ -8,6 +8,8 @@ class CustomDropdownWithTextField extends StatelessWidget {
   final Function(String)? onAddNewItem;
   final Function(String) onSelectItem;
   final String label;
+  final String hint;
+
   const CustomDropdownWithTextField({
     required this.dataList,
     required this.selectedItem,
@@ -15,6 +17,7 @@ class CustomDropdownWithTextField extends StatelessWidget {
     required this.onSelectItem,
     super.key,
     required this.label,
+    required this.hint,
   });
 
   @override
@@ -37,8 +40,7 @@ class CustomDropdownWithTextField extends StatelessWidget {
               color: AppTheme.theme.scaffoldBackgroundColor,
               onSelected: (value) {
                 onSelectItem(value);
-                selectedItem.value =
-                    value; // Update selected item when an option is selected
+                selectedItem.value = value;
               },
               itemBuilder: (BuildContext context) {
                 return [
@@ -75,9 +77,9 @@ class CustomDropdownWithTextField extends StatelessWidget {
                               child: TextFormField(
                                 autofocus: true,
                                 keyboardType: TextInputType.text,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   contentPadding: EdgeInsets.all(3),
-                                  labelText: "Add new item",
+                                  labelText: label,
                                   labelStyle: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w300,
@@ -116,15 +118,11 @@ class CustomDropdownWithTextField extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      selectedItem.value.isEmpty
-                          ? "Select $label"
-                          : selectedItem.value,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                        selectedItem.value.isEmpty
+                            ? "Select $hint"
+                            : selectedItem.value,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500)),
                     const Icon(
                       Icons.arrow_drop_down,
                       color: Colors.black,

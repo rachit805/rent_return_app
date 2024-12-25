@@ -1,20 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:rent_and_return/helper/get_storage_helper.dart';
 import 'package:rent_and_return/ui/auth/otp_verification_screen.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
 
 class LoginController extends GetxController {
   final TextEditingController cnameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-
+  GetStorageHelper storageHelper = GetStorageHelper();
   var phoneNumber = ''.obs;
   var otp = ''.obs;
   var isOTPSent = false.obs;
   var verificationId = ''.obs;
 
   FirebaseAuth auth = FirebaseAuth.instance;
-  
+
   void sendOTP() async {
     if (cnameController.text.isEmpty) {
       showErrorSnackbar("Error", "Please enter company name");
@@ -39,6 +41,9 @@ class LoginController extends GetxController {
         },
         codeSent: (String verificationId, int? resendToken) {
           this.verificationId.value = verificationId;
+          storageHelper.saveData("ownerName", cnameController.text);
+          storageHelper.saveData("phoneNumber", phoneController.text);
+
           Get.to(() => OtpVerificationScreen(phone: phoneController.text));
           isOTPSent.value = false;
         },
@@ -63,6 +68,4 @@ class LoginController extends GetxController {
       showErrorSnackbar("Error", "Invalid OTP. Please try again.");
     }
   }
-
-  
 }

@@ -1,10 +1,15 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rent_and_return/services/data_services.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 import 'package:rent_and_return/widgets/error_snackbar.dart';
+
+import 'package:image/image.dart' as img;
 
 class AddItemController extends GetxController {
   @override
@@ -31,6 +36,44 @@ class AddItemController extends GetxController {
 
   InterstitialAd? interstitialAd;
   RxBool isLoaded = false.obs;
+
+  ///
+  ///
+
+  var pickedImage = Rx<File?>(null);
+  var isLoading = false.obs;
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickImage(ImageSource source) async {
+    isLoading.value = true; // Start loading
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image != null) {
+      await Future.delayed(const Duration(milliseconds: 500)); // Simulate delay
+      pickedImage.value = File(image.path);
+    }
+    isLoading.value = false; // Stop loading
+  }
+
+  ////// COMPRESED IMAGE
+  Future<Uint8List> compressAndResizeImage(File file) async {
+    // Read the image file as bytes
+    Uint8List imageBytes = await file.readAsBytes();
+
+    // Decode the image
+    img.Image? originalImage = img.decodeImage(imageBytes);
+
+    if (originalImage != null) {
+      // Resize the image to a smaller dimension (e.g., max width: 300px)
+      img.Image resizedImage = img.copyResize(originalImage, width: 300);
+
+      // Encode the resized image to JPEG with compression
+      return Uint8List.fromList(
+          img.encodeJpg(resizedImage, quality: 75)); // 75% quality
+    }
+
+    throw Exception("Failed to process image");
+  }
 
   void loadInterstitialAd() {
     InterstitialAd.load(
@@ -64,7 +107,7 @@ class AddItemController extends GetxController {
       interstitialAd!.show();
     } else {
       print("Ad not ready, navigating directly.");
-      Get.to (() => Homepage());
+      Get.to(() => Homepage());
     }
   }
 
@@ -142,29 +185,30 @@ class AddItemController extends GetxController {
     if (itemId != null) {
       await loadItems(
           categoryUid); // Refresh the item list for the selected category
-      Get.snackbar("Success", "Item added successfully with ID: $itemId.");
+      showSuccessSnackbar(
+          "Success", "Item added successfully with ID: $itemId.");
     } else {
-      Get.snackbar("Error", "Failed to add item.");
+      showErrorSnackbar("Error", "Failed to add item.");
     }
   }
 
   // Add a new size under the selected item
   Future<void> addSize(String sizeName) async {
     if (selectedItem.isEmpty) {
-      Get.snackbar("Error", "Please select an item first.");
+      showErrorSnackbar("Error", "Please select an item first.");
       return;
     }
 
     // Get the selected item's ID
     final itemId = await _getItemIdByName(selectedItem.value);
     if (itemId == null) {
-      Get.snackbar("Error", "Invalid item selection.");
+      showErrorSnackbar("Error", "Invalid item selection.");
       return;
     }
     // Check if the size already exists under the selected category
     final existingSize = await dbHelper.getSIzeByItem(sizeName, itemId);
     if (existingSize.isNotEmpty) {
-      Get.snackbar("Error", "Size already exists in this category.");
+      showErrorSnackbar("Error", "Size already exists in this category.");
       return;
     }
 
@@ -176,7 +220,7 @@ class AddItemController extends GetxController {
     };
     await dbHelper.insertSize(size);
     await loadSizes(itemId);
-    Get.snackbar("Success", "Size added.");
+    showSuccessSnackbar("Success", "Size added.");
   }
 
 // Add SKU to inventory or update stock in slavecarddetail
@@ -186,7 +230,8 @@ class AddItemController extends GetxController {
         selectedSize.isEmpty ||
         quantityController.text.isEmpty ||
         purchasePriceController.text.isEmpty ||
-        rentPriceController.text.isEmpty) {
+        rentPriceController.text.isEmpty ||
+        pickedImage.value == null) {
       showErrorSnackbar("Error", "Please fill all fields.");
       return;
     }
@@ -197,7 +242,7 @@ class AddItemController extends GetxController {
     final sizeId = await _getSizeIdByName(selectedSize.value, itemId!);
 
     if (categoryUid == null || itemId == null || sizeId == null) {
-      Get.snackbar("Error", "Invalid selections.");
+      showErrorSnackbar("Error", "Invalid selections.");
       return;
     }
 
@@ -210,6 +255,8 @@ class AddItemController extends GetxController {
 
     if (existingSku == null) {
       // Add new SKU to the SKU table
+      Uint8List? imageBytes = await compressAndResizeImage(pickedImage.value!);
+
       final newSku = {
         'sku_uid': "${categoryUid}_${itemId}_$sizeId",
         'sku_name':
@@ -225,6 +272,7 @@ class AddItemController extends GetxController {
         'rent_price': rentPrice,
         'version': 1,
         'status': 'active',
+        "image": imageBytes,
         'added_date': DateTime.now().toIso8601String(),
         'expire_date': null,
       };
@@ -248,7 +296,7 @@ class AddItemController extends GetxController {
 
       await dbHelper.insertSlaveCard(slaveData);
 
-      Get.snackbar("Success", "New SKU added successfully.");
+      showSuccessSnackbar("Success", "New SKU added successfully.");
     } else {
       // Update existing SKU's version and add data to slavecarddetail
       final newVersion = existingSku['version'] + 1;
@@ -271,8 +319,8 @@ class AddItemController extends GetxController {
       };
 
       await dbHelper.insertSlaveCard(slaveData);
-      Get.snackbar(
-          "Success", "SKU updated, and data added to slavecarddetail.");
+      // showSuccessSnackbar(
+      //     "Success", "SKU updated, and data added to slavecarddetail.");
     }
 
     // Reset input fields
@@ -282,7 +330,7 @@ class AddItemController extends GetxController {
     quantityController.clear();
     purchasePriceController.clear();
     rentPriceController.clear();
-
+    pickedImage.value = null;
     showInterstitialAd();
   }
 
@@ -299,7 +347,7 @@ class AddItemController extends GetxController {
     // Get the selected category UID
     final categoryUid = await _getCategoryUidByName(selectedCategory.value);
     if (categoryUid == null) {
-      Get.snackbar("Error", "Invalid category selection.");
+      showErrorSnackbar("Error", "Invalid category selection.");
       return null;
     }
 
@@ -322,5 +370,6 @@ class AddItemController extends GetxController {
   }
 
   var version = 1.obs;
+
   void addexistingStock() {}
 }

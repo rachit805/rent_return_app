@@ -31,10 +31,10 @@ dev_dependencies:
 flutter_launcher_icons:  
   android: true
   ios: true
-  image_path: "assets/images/logo.png"  
+  image_path: "assets/images/app_icon.png"  
 flutter_native_splash:
   color: "#ffffff" # Background color for splash screen
-  image: assets/images/logo.png # Path to your logo
+  image: assets/images/logo.png # Path to your app_icon
   android: true
   ios: true
   remove_alpha_ios: true
@@ -49,9 +49,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/images/logo.png
+    - assets/images/app_icon.png
 
 icons_launcher:
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/app_icon.png"
   android: true
   ios: true

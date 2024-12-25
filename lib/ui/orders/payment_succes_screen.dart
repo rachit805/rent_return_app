@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/order_reciept_controller.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
+import 'package:rent_and_return/ui/bottom_nav_bar/inventory_screen.dart.dart';
 import 'package:rent_and_return/ui/orders/order_receipt_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_appbar2.dart';

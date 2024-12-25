@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:rent_and_return/controller/add_item_controller.dart';
-import 'package:rent_and_return/ui/inventory/home_screen.dart';
+import 'package:rent_and_return/ui/bottom_nav_bar/inventory_screen.dart.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_appbar.dart';
 import 'package:rent_and_return/widgets/c_btn.dart';
@@ -44,7 +45,8 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedCategory,
                     onAddNewItem: controller.addCategory,
                     onSelectItem: controller.selectedCategory,
-                    label: 'category',
+                    label: 'Add new category',
+                    hint: 'Category',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -55,7 +57,8 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedItem,
                     onAddNewItem: controller.addItem,
                     onSelectItem: controller.selectedItem,
-                    label: 'item',
+                    label: 'Add new item',
+                    hint: 'Item',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -66,7 +69,8 @@ class AddInventoryScreen extends StatelessWidget {
                     selectedItem: controller.selectedSize,
                     onAddNewItem: controller.addSize,
                     onSelectItem: controller.selectedSize,
-                    label: 'size',
+                    label: 'Add new size',
+                    hint: 'Size',
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -83,8 +87,9 @@ class AddInventoryScreen extends StatelessWidget {
                   // Rent Price
                   buildLabel("Rent Price (per item)"),
                   buildTextField(controller.rentPriceController),
+                  cspacingHeight(sH * 0.02),
+                  ImagePickerWidget(),
                   cspacingHeight(sH * 0.05),
-
                   cBtn("Add Item", () async {
                     await controller.addItemToInventory();
                     controller.debugPrintDatabase();
@@ -113,12 +118,88 @@ class AddInventoryScreen extends StatelessWidget {
 
   Widget buildTextField(TextEditingController controller) {
     return TextFormField(
+      style: const TextStyle(
+          fontSize: 17, fontWeight: FontWeight.w500, color: Colors.black),
       controller: controller,
       keyboardType: TextInputType.number,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         contentPadding: EdgeInsets.all(8),
-        border: OutlineInputBorder(),
+        focusedBorder: OutlineInputBorder(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black),
       ),
+    );
+  }
+}
+
+class ImagePickerWidget extends StatelessWidget {
+  final AddItemController controller = Get.find();
+
+  @override
+  Widget build(BuildContext context) {
+    double sH = MediaQuery.of(context).size.height;
+
+    return Obx(
+      () => GestureDetector(
+        onTap: () => _showImageSourceDialog(context, controller),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade300,
+            image: controller.pickedImage.value != null
+                ? DecorationImage(
+                    image: FileImage(controller.pickedImage.value!),
+                    fit: BoxFit.fitHeight,
+                  )
+                : null,
+          ),
+          width: double.infinity,
+          height: sH * 0.2,
+          child: controller.isLoading.value
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.black54,
+                  ),
+                )
+              : controller.pickedImage.value == null
+                  ? Icon(
+                      Icons.camera_alt_outlined,
+                      color: Colors.black54,
+                      size: 30,
+                    )
+                  : null,
+        ),
+      ),
+    );
+  }
+
+  void _showImageSourceDialog(
+      BuildContext context, AddItemController controller) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera),
+              title: Text('Take a Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                controller.pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo),
+              title: Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                controller.pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

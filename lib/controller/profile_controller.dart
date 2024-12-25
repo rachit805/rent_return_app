@@ -60,7 +60,7 @@ class ProfileController extends GetxController {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        print("Image picked: ${image.path}"); // Debug print
+        print("Image picked: ${image.path}"); 
         imagePath.value = image.path;
         _storageHelper.saveData('imagePath', image.path);
       } else {

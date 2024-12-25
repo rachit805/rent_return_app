@@ -61,6 +61,7 @@ class DatabaseHelper {
         version INTEGER,
         added_date TEXT,
         status TEXT,
+        image BLOB,
         expire_date TEXT,
         FOREIGN KEY(item_id) REFERENCES item(item_id),   -- Correct foreign key reference
         FOREIGN KEY(size_id) REFERENCES size(size_id)      -- Correct foreign key reference
@@ -136,6 +137,7 @@ class DatabaseHelper {
     "image" TEXT,
     "delivery_date" TEXT,
     "return_date" TEXT,
+    booked_date TEXT,
     "customer_id" INTEGER,
     "status" TEXT,
     FOREIGN KEY(customer_id) REFERENCES customer_data(customer_id),
@@ -329,7 +331,8 @@ class DatabaseHelper {
       print("Error updating item status: $e");
     }
   }
-Future<void> updateOrderedSummmaryStatus(orderId) async {
+
+  Future<void> updateOrderedSummmaryStatus(orderId) async {
     try {
       final db = await database;
 

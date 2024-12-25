@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:path/path.dart';
 import 'package:rent_and_return/controller/home_screen_controller.dart';
 import 'package:rent_and_return/controller/item_detail_controller.dart';
 import 'package:rent_and_return/ui/inventory/add_inventory_screen.dart';
@@ -62,7 +64,7 @@ class InventoryScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                cspacingHeight(sH * 0.05),
+                cspacingHeight(sH * 0.02),
                 csearchbar(sW, "Search Item"),
                 cspacingHeight(sH * 0.02),
                 stockIndicator(sW),
@@ -107,7 +109,9 @@ class InventoryScreen extends StatelessWidget {
                                 sku_id: item['sku_id'] ?? "Unknown",
                                 category_id: item['category_id'] ?? "Unknown",
                                 item_id: item['item_id'] ?? "Unknown",
-                                size_id: item['size_id'] ?? "Unknown"),
+                                size_id: item['size_id'] ?? "Unknown",
+                                imagefile: item['image'],
+                                context: context),
                           ),
                         );
                       },
@@ -132,6 +136,8 @@ class InventoryScreen extends StatelessWidget {
     required category_id,
     required item_id,
     required size_id,
+    required imagefile,
+    required BuildContext context,
   }) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -179,23 +185,42 @@ class InventoryScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    width: 1.5,
-                    color: Colors.grey.shade400,
+              GestureDetector(
+                onTap: () {
+                  if (imagefile != null && imagefile is Uint8List) {
+                    // Show large image in a dialog or fullscreen
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        child: Image.memory(imagefile, fit: BoxFit.contain),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 1.5,
+                      color: Colors.grey.shade400,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.sports_golf,
-                  color: Colors.grey,
+                  child: (imagefile != null && imagefile is Uint8List)
+                      ? ClipOval(
+                          child: Image.memory(
+                          imagefile,
+                          fit: BoxFit.fill,
+                        )) // Display image
+                      : Icon(
+                          Icons.image_not_supported,
+                          color: Colors.black54,
+                        ), // Placeholder if no image
                 ),
               ),
               Text(
-                "₹${rentPrice.toStringAsFixed(0)}/- per peice",
+                "₹${rentPrice.toStringAsFixed(0)}/- per piece",
                 style: const TextStyle(fontSize: 12),
               ),
             ],

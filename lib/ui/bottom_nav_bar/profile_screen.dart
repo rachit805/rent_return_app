@@ -92,9 +92,11 @@ class ProfileScreen extends StatelessWidget {
                           height: 20,
                           width: sW * 0.75,
                           child: TextFormField(
+                            readOnly: true,
                             controller: controller.ownerNameController,
                             decoration: const InputDecoration(
-                                hintText: "Owner Name",
+                                labelText: "Company Name",
+                                hintText: "Company Name",
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.only(left: 25),
                                   child: Icon(
@@ -124,9 +126,11 @@ class ProfileScreen extends StatelessWidget {
                           height: 20,
                           width: sW * 0.75,
                           child: TextFormField(
+                            readOnly: true,
                             controller: controller.phoneNumberController,
                             decoration: const InputDecoration(
                                 hintText: "Mobile Number",
+                                labelText: "Mobile Number",
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.only(left: 25),
                                   child: Icon(

@@ -72,7 +72,7 @@ Widget masterCard({
                 ),
                 SizedBox(height: sH * 0.01),
                 Text(
-                  "Total Qty: ${quantity.toStringAsFixed(0)} pieces",
+                  "Avg. Qty: ${quantity.toStringAsFixed(0)} pieces",
                   style: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w500),
                 ),
