@@ -2,6 +2,18 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomePageController extends GetxController {
+  final int initialPage;
+  late final RxInt selectedIndex;
+
+  HomePageController({required this.initialPage}) {
+    // Properly initialize `selectedIndex` here
+    selectedIndex = RxInt(initialPage);
+  }
+
+  void onItemTapped(int index) {
+    selectedIndex.value = index;
+  }
+
   RxBool isBannerAdLoaded = false.obs;
   BannerAd? bannerAd;
 
@@ -14,7 +26,7 @@ class HomePageController extends GetxController {
   void initializeBannerAd() {
     bannerAd = BannerAd(
       adUnitId:
-          'ca-app-pub-2514113084570130/4856025877', // Replace with your actual ad unit ID
+          'ca-app-pub-3940256099942544/6300978111', // Google's test ad unit ID
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -35,10 +47,5 @@ class HomePageController extends GetxController {
   void onClose() {
     bannerAd?.dispose();
     super.onClose();
-  }
-
-  var selectedIndex = 2.obs;
-  void onItemTapped(int index) {
-    selectedIndex.value = index;
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/add_item_order_controller.dart';
-import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
+// import 'package:rent_and_return/ui/orders/preview_order_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_bottom_button.dart';
 // import 'package:rent_and_return/widgets/c_search_bar.dart';
@@ -138,10 +138,8 @@ class AddItemInOrderScreen extends StatelessWidget {
                           list: controller.sizes,
                           onChanged: (String? value) {
                             if (value != null) {
-                              controller.selectedSize.value =
-                                  value; // Update selected size
-                              controller
-                                  .fetchSKUData(); // Fetch SKU data dynamically
+                              controller.selectedSize.value = value;
+                              controller.fetchSKUData();
                             }
                           },
                           textStyle:
@@ -159,10 +157,14 @@ class AddItemInOrderScreen extends StatelessWidget {
                       (input) {
                         final enteredQty = int.tryParse(input) ?? 0;
 
-                        final remainingQty =
-                            controller.availableQty.value - enteredQty;
+                        if (controller.finalAvailableQty.value != null) {
+                          final remainingQty =
+                              controller.finalAvailableQty.value - enteredQty;
 
-                        controller.remainingQty.value = remainingQty;
+                          controller.remainingQty.value = remainingQty;
+                        } else {
+                          controller.remainingQty.value = 0;
+                        }
                         return "Remaining Qty: ${controller.remainingQty.value}";
                       },
                     ),
@@ -256,10 +258,6 @@ class AddItemInOrderScreen extends StatelessWidget {
           ),
         ),
       ),
-
-      // bottomNavigationBar: cbottomButton("Preview Order", () {
-      //   Get.to(() => PreviewOrderScreen());
-      // }, AppTheme.theme.scaffoldBackgroundColor),
     );
   }
 
@@ -267,6 +265,8 @@ class AddItemInOrderScreen extends StatelessWidget {
       String? hintText, bool readOnly, String? aQty) {
     return TextFormField(
       controller: controller,
+      style: TextStyle(
+          color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
       autofocus: false,
       readOnly: readOnly,
       decoration: InputDecoration(
@@ -290,12 +290,24 @@ class AddItemInOrderScreen extends StatelessWidget {
         getSuffixText, // A function to dynamically generate the suffix
   ) {
     return TextFormField(
+      cursorColor: AppTheme.theme.primaryColor,
       controller: controller,
+      keyboardType: TextInputType.number,
+      style: TextStyle(
+          color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
       autofocus: false,
       readOnly: readOnly,
       onChanged: (value) {
-        // Trigger the state update on change
         getSuffixText(value);
+      },
+      validator: (value) {
+        final enteredQty = int.tryParse(value ?? '') ?? 0;
+        final remainingQty =
+            int.tryParse(getSuffixText(controller.text) ?? '') ?? 0;
+        if (enteredQty > remainingQty) {
+          return 'Quantity cannot exceed $remainingQty';
+        }
+        return null;
       },
       decoration: InputDecoration(
         labelStyle: AppTheme.theme.textTheme.headlineLarge?.copyWith(
@@ -304,6 +316,9 @@ class AddItemInOrderScreen extends StatelessWidget {
         hintText: hintText,
         suffix: Obx(() => Text("${getSuffixText(controller.text)}")),
         enabledBorder: const UnderlineInputBorder(),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppTheme.theme.primaryColor),
+        ),
       ),
     );
   }
@@ -311,6 +326,9 @@ class AddItemInOrderScreen extends StatelessWidget {
   Widget buildDatePickerField(
       TextEditingController controller, String label, BuildContext context) {
     return TextFormField(
+      cursorColor: AppTheme.theme.primaryColor,
+      style: TextStyle(
+          color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
       controller: controller,
       readOnly: true, // Prevents manual input
       decoration: InputDecoration(
@@ -395,8 +413,6 @@ class _CDropDownState extends State<CDropDown> {
   @override
   Widget build(BuildContext context) {
     final String? selectedValue = widget.selectedValue;
-    final TextStyle? textStyle =
-        widget.textStyle ?? Theme.of(context).textTheme.bodyMedium;
 
     return SizedBox(
       width: double.infinity,
@@ -411,14 +427,18 @@ class _CDropDownState extends State<CDropDown> {
         value: widget.list.contains(selectedValue) ? selectedValue : null,
         hint: Text(
           widget.hintText,
-          style: textStyle?.copyWith(color: Colors.grey),
+          style: TextStyle(
+              color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
         ),
         items: widget.list.map((String item) {
           return DropdownMenuItem<String>(
             value: item,
             child: Text(
               item,
-              style: textStyle,
+              style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16),
             ),
           );
         }).toList(),

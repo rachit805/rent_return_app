@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/add_address_controller.dart';
 import 'package:rent_and_return/controller/create_order_userDeatail_contrroller.dart';
-import 'package:rent_and_return/ui/orders/new_orders_screen.dart';
 import 'package:rent_and_return/ui/orders/payment_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_appbar2.dart';
@@ -13,9 +12,9 @@ import 'package:rent_and_return/widgets/c_sizedbox.dart';
 class AddAddressScreen extends StatelessWidget {
   AddAddressScreen({super.key, required this.totalAmount});
   final CreateOrderController userdatacontroller = Get.find();
-
+// final AddAddressController controller = Get.find();
   // final AddAddressController controller = Get.put(AddAddressController());
-  var totalAmount;
+  final totalAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +22,12 @@ class AddAddressScreen extends StatelessWidget {
     final AddAddressController controller = Get.put(
       AddAddressController(totalAmountValue: totalAmount.value),
     );
-    double sH = MediaQuery.of(context).size.height; 
+    double sH = MediaQuery.of(context).size.height;
     double sW = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(70),
-          child: cAppbar2("Place Order", (){ })),
+          child: cAppbar2("Place Order", () {})),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: SingleChildScrollView(
@@ -40,10 +39,14 @@ class AddAddressScreen extends StatelessWidget {
                 style: AppTheme.theme.textTheme.bodyLarge?.copyWith(
                     color: Colors.black, fontWeight: FontWeight.w600),
               ),
-              Text(
-                userdatacontroller.addressController.text,
-                style: AppTheme.theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.black, fontWeight: FontWeight.w500),
+              Obx(
+                () => Text(
+                  userdatacontroller.selectedAddress.isEmpty
+                      ? userdatacontroller.addressController.text
+                      : userdatacontroller.selectedAddress.value,
+                  style: AppTheme.theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.black, fontWeight: FontWeight.w500),
+                ),
               ),
               cspacingHeight(sH * 0.05),
               cBtn("Place to this address", () {
@@ -117,6 +120,8 @@ class AddAddressScreen extends StatelessWidget {
                                               width: sW * 0.2,
                                               height: 40,
                                               child: TextFormField(
+                                                keyboardType:
+                                                    TextInputType.number,
                                                 controller: controller
                                                     .advanceAmountController,
                                                 focusNode: controller
@@ -189,23 +194,89 @@ class AddAddressScreen extends StatelessWidget {
                     InkWell(
                       onTap: () {
                         showModalBottomSheet(
+                            isScrollControlled: true,
                             context: context,
                             builder: (builder) => SizedBox(
-                                  height: sH * 0.5,
+                                  height: sH * 0.6,
                                   child: Padding(
                                     padding: const EdgeInsets.all(20),
                                     child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         TextFormField(
-                                          controller: userdatacontroller
-                                              .newAddressController,
-                                          keyboardType:
-                                              TextInputType.streetAddress,
-                                          decoration: const InputDecoration(
-                                              hintText: "Add New Address"),
-                                        ),
+                                            controller: userdatacontroller
+                                                .newAddressController,
+                                            keyboardType:
+                                                TextInputType.streetAddress,
+                                            decoration: InputDecoration(
+                                              hintText: "Add New Address",
+                                              labelText: "New Address",
+                                              labelStyle:
+                                                  TextStyle(color: Colors.grey),
+                                              focusColor:
+                                                  AppTheme.theme.primaryColor,
+                                              focusedBorder:
+                                                  UnderlineInputBorder(),
+                                            )),
                                         cspacingHeight(sH * 0.05),
-                                        cBtn("Add Address", () {}, Colors.white)
+                                        cBtn("Add Address", () {
+                                          userdatacontroller.addNewAddress();
+                                        }, Colors.white),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8),
+                                          child: Text(
+                                            "Select Address",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 18,
+                                                color: Colors.grey),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Obx(
+                                            () => ListView.builder(
+                                              itemCount: userdatacontroller
+                                                  .addressList.length,
+                                              reverse: true,
+                                              itemBuilder: (context, index) {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      InkWell(
+                                                        onTap: () {
+                                                          userdatacontroller
+                                                                  .selectedAddress
+                                                                  .value =
+                                                              userdatacontroller
+                                                                      .addressList[
+                                                                  index];
+                                                          Get.back();
+                                                        },
+                                                        child: Text(
+                                                          userdatacontroller
+                                                                  .addressList[
+                                                              index],
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                              fontSize: 17),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        )
                                       ],
                                     ),
                                   ),

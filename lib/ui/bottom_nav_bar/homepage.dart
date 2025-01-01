@@ -5,18 +5,26 @@ import 'package:rent_and_return/controller/home_screen_controller.dart';
 import 'package:rent_and_return/controller/homepage_controller.dart';
 import 'package:rent_and_return/controller/orders_controller/all_order_controller.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/dashboard_screen.dart';
-import 'package:rent_and_return/ui/bottom_nav_bar/profile_screen.dart';
 import 'package:rent_and_return/ui/bottom_nav_bar/inventory_screen.dart.dart';
+import 'package:rent_and_return/ui/bottom_nav_bar/profile_screen.dart';
 import 'package:rent_and_return/ui/orders/all_orders_screen.dart';
-import 'package:rent_and_return/utils/strings.dart';
+import 'package:rent_and_return/utils/theme.dart';
 
 class Homepage extends StatelessWidget {
-  Homepage({super.key});
+  final int initialPage;
 
-  final HomePageController controller = Get.put(HomePageController());
+  Homepage({
+    Key? key,
+    required this.initialPage,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Pass `initialPage` dynamically to the controller
+    final HomePageController controller = Get.put(
+      HomePageController(initialPage: initialPage),
+    );
+
     List<Widget> screens = [
       DashboardScreen(),
       GetBuilder<AllOrderController>(
@@ -56,12 +64,11 @@ class Homepage extends StatelessWidget {
       child: Obx(
         () => Scaffold(
           bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: primary2Color,
             currentIndex: controller.selectedIndex.value,
-            iconSize: 25,
             onTap: controller.onItemTapped,
             type: BottomNavigationBarType.fixed,
             showSelectedLabels: true,
+            backgroundColor: AppTheme.theme.primaryColor,
             showUnselectedLabels: true,
             selectedItemColor: Colors.black,
             items: const [

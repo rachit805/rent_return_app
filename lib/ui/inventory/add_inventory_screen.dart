@@ -43,34 +43,59 @@ class AddInventoryScreen extends StatelessWidget {
                   CustomDropdownWithTextField(
                     dataList: controller.categories,
                     selectedItem: controller.selectedCategory,
-                    onAddNewItem: controller.addCategory,
-                    onSelectItem: controller.selectedCategory,
-                    label: 'Add new category',
-                    hint: 'Category',
+                    label: "Category",
+                    hint: "Category",
+                    onSelectItem: (value) async {
+                      controller.selectedCategory.value = value;
+
+                      // Fetch items based on selected category
+                      if (value != "Select Category") {
+                        await controller.fetchItems(value);
+                      }
+                    },
+                    onAddNewItem: (newCategory) async {
+                      await controller.addCategory(newCategory);
+                    },
                   ),
+
                   cspacingHeight(sH * 0.02),
 
                   // Item Name Dropdown
                   buildLabel("Item Name"),
+
+                  // Item Dropdown
                   CustomDropdownWithTextField(
                     dataList: controller.items,
                     selectedItem: controller.selectedItem,
-                    onAddNewItem: controller.addItem,
-                    onSelectItem: controller.selectedItem,
-                    label: 'Add new item',
-                    hint: 'Item',
+                    label: "Item",
+                    hint: "Item",
+                    onSelectItem: (value) async {
+                      controller.selectedItem.value = value;
+
+                      // Fetch sizes based on selected item
+                      if (value != "Select Item") {
+                        await controller.fetchSizes(value);
+                      }
+                    },
+                    onAddNewItem: (newItem) async {
+                      await controller.addItem(newItem);
+                    },
                   ),
                   cspacingHeight(sH * 0.02),
+                  buildLabel("Size"),
 
                   // Size Dropdown
-                  buildLabel("Size"),
                   CustomDropdownWithTextField(
                     dataList: controller.sizes,
                     selectedItem: controller.selectedSize,
-                    onAddNewItem: controller.addSize,
-                    onSelectItem: controller.selectedSize,
-                    label: 'Add new size',
-                    hint: 'Size',
+                    label: "Size",
+                    hint: "Size",
+                    onSelectItem: (value) {
+                      controller.selectedSize.value = value;
+                    },
+                    onAddNewItem: (newSize) async {
+                      await controller.addSize(newSize);
+                    },
                   ),
                   cspacingHeight(sH * 0.02),
 
@@ -110,8 +135,8 @@ class AddInventoryScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+        // const SizedBox(height: 8),
       ],
     );
   }

@@ -87,7 +87,7 @@ final storage = GetStorage(); // GetStorage instance
     if (phoneNumber.value.isNotEmpty) {
       _loginController.sendOTP();
     } else {
-      Get.snackbar("Error", "Please enter a valid phone number first");
+      showErrorSnackbar("Error", "Please enter a valid phone number first");
     }
   }
   // Handle successful login
@@ -97,14 +97,14 @@ final storage = GetStorage(); // GetStorage instance
     storage.write('user_uid', userUID);
 
     // Navigate to the main screen
-    Get.offAll(() => Homepage());
+    Get.offAll(() => Homepage(initialPage: 2,));
   }
 
   // Check login session
   void checkLoginSession() {
     String? userUID = storage.read('user_uid');
     if (userUID != null) {
-      Get.offAll(() => Homepage());
+      Get.offAll(() => Homepage(initialPage: 2,));
     }
   }
 }

@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/ordered_item_controller.dart';
-import 'package:rent_and_return/controller/orders_controller/return_order_controller.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_appbar.dart';
 import 'package:rent_and_return/widgets/c_btn.dart';
 import 'package:rent_and_return/widgets/c_sizedbox.dart';
 
 class AllOrderedItemScreen extends StatelessWidget {
-  const AllOrderedItemScreen({super.key, required this.orderId});
+  AllOrderedItemScreen({
+    super.key,
+    required this.orderId,
+    required this.customerName,
+    required this.customerCity,
+    required this.customerPhone,
+    required this.isReturn,
+  });
 
+  final String customerName;
+  final String customerCity;
+  final String customerPhone;
   final String orderId;
+  final bool isReturn;
+
+  late final OrderedItemController controller;
+
   @override
   Widget build(BuildContext context) {
-    final OrderedItemController controller = Get.put(OrderedItemController());
-
     double sW = MediaQuery.of(context).size.width;
-
     double sH = MediaQuery.of(context).size.height;
-    controller.setOrderId(orderId); // Set orderId in the controller
-    controller.getOrderedItems(); // Fetch ordered items
 
-    print("OrderId>>> $orderId");
-    final activeItems = controller.orderedItems
-        .where((item) => item['status'] == 'Active')
-        .toList();
-    final returnItems = controller.orderedItems
-        .where((item) => item['status'] == 'Return')
-        .toList();
-    print("ACTIVE ITEMS IN UI>> ${activeItems.length}");
-    print("Ordered ITEMS IN UI>> ${controller.orderedItems.length}");
-    print("Returned ITEMS IN UI>> ${controller.returnedOrdersData.length}");
-
+    controller = Get.put(OrderedItemController(orderId));
+    controller.getOrderedItems();
+    print('isReturn: $isReturn');
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -40,68 +40,105 @@ class AllOrderedItemScreen extends StatelessWidget {
           child: Column(
             children: [
               CAppbar(
-                title: "All Items",
+                title: "Order Details",
                 leading: true,
                 leadingIconColor: Colors.black,
                 labelColor: Colors.black,
                 bgColor: AppTheme.theme.scaffoldBackgroundColor,
               ),
-              const Divider()
+              const Divider(),
             ],
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: sH * 0.025, bottom: sH * 0.01),
-                child: Obx(() {
-                  final activeItems = controller.orderedItems
-                      .where((item) => item['status'] == 'Active')
-                      .toList();
-                  final returnItems = controller.orderedItems
-                      .where((item) => item['status'] == 'Return')
-                      .toList();
-
-                  return TabBar(
-                    dividerColor: Colors.transparent,
-                    indicatorColor: AppTheme.theme.primaryColor,
-                    labelColor: AppTheme.theme.primaryColor,
-                    labelStyle: AppTheme.theme.textTheme.labelMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                    unselectedLabelColor: Colors.black,
-                    tabs: [
-                      SizedBox(
-                        width: sW * 0.4,
-                        child: Tab(
-                          text: "All(${activeItems.length})",
-                        ),
-                      ),
-                      SizedBox(
-                        width: sW * 0.4,
-                        child: Tab(
-                          text: "Returned(${returnItems.length})",
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              ),
-              Spacing.v20,
-              Expanded(
-                child: TabBarView(
+        body: isReturn == true
+            ? returnedUI(sH, sW)
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
                   children: [
-                    OrderedItemsScreen(controller: controller, sW: sW),
-                    ReturnOrdersTab(controller: controller, sW: sW),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: sH * 0.01),
+                      child: Obx(() {
+                        final activeItems = controller.orderedItems
+                            .where((item) => item['status'] == 'Active')
+                            .toList();
+                        final returnItems = controller.orderedItems
+                            .where((item) => item['status'] == 'Return')
+                            .toList();
+
+                        return TabBar(
+                          dividerColor: Colors.transparent,
+                          indicatorColor: AppTheme.theme.primaryColor,
+                          labelColor: AppTheme.theme.primaryColor,
+                          labelStyle: AppTheme.theme.textTheme.labelMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          unselectedLabelColor: Colors.black,
+                          tabs: [
+                            SizedBox(
+                              width: sW * 0.4,
+                              child: Tab(
+                                text: "All(${activeItems.length})",
+                              ),
+                            ),
+                            SizedBox(
+                              width: sW * 0.4,
+                              child: Tab(
+                                text: "Returned(${returnItems.length})",
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                    Spacing.v20,
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          OrderedItemsScreen(controller: controller, sW: sW),
+                          ReturnOrdersTab(controller: controller, sW: sW),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  Widget returnedUI(double sH, double sW) {
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            "Customer Details",
+            style: AppTheme.theme.textTheme.labelMedium,
+          ),
+          cspacingHeight(sH * 0.02),
+          Text(
+            "Name: $customerName",
+            style: AppTheme.theme.textTheme.labelMedium,
+          ),
+          cspacingHeight(sH * 0.02),
+          Text(
+            "City: $customerCity",
+            style: AppTheme.theme.textTheme.labelMedium,
+          ),
+          cspacingHeight(sH * 0.02),
+          Text(
+            "Phone: $customerPhone",
+            style: AppTheme.theme.textTheme.labelMedium,
+          ),
+          cspacingHeight(sH * 0.02),
+          const Divider(),
+          cspacingHeight(sH * 0.02),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Divider(),
+          ),
+          // cspacingHeight(sH * 0.02),
+          Expanded(child: ReturnOrdersTab(controller: controller, sW: sW))
+        ]));
   }
 }
 
@@ -122,12 +159,11 @@ class OrderedItemsScreen extends StatelessWidget {
       if (activeItems.isEmpty) {
         return const Center(
           child: Text(
-            "No Active Orders, All orders returned!",
+            "No Active Orders",
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         );
       }
-
       return Column(
         children: [
           Expanded(
@@ -211,8 +247,10 @@ class OrderedItemsScreen extends StatelessWidget {
 }
 
 Widget cartItemCard(Map<String, dynamic> item, int index, BuildContext context,
-    OrderedItemController controller) {
+    OrderedItemController controller,
+    {bool isReturn = false}) {
   double sW = MediaQuery.of(context).size.width;
+  double sH = MediaQuery.of(context).size.height;
 
   return Padding(
     padding: const EdgeInsets.only(bottom: 15),
@@ -223,15 +261,17 @@ Widget cartItemCard(Map<String, dynamic> item, int index, BuildContext context,
         padding: const EdgeInsets.all(10.0),
         child: Row(
           children: [
-            Image.asset(
-              "assets/images/chair.png",
-              width: 80,
-              height: 80,
-              fit: BoxFit.fill,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(
+                item['image'],
+                width: 60,
+                height: 80,
+                fit: BoxFit.fill,
+              ),
             ),
             const SizedBox(width: 15),
             Column(
-              // mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -239,13 +279,14 @@ Widget cartItemCard(Map<String, dynamic> item, int index, BuildContext context,
                   children: [
                     Text(
                       item['sku_name'] ?? "Item Name",
+                      overflow: TextOverflow.ellipsis,
                       style: AppTheme.theme.textTheme.labelMedium,
                     ),
-                    // Expanded(child: SizedBox()),
                     SizedBox(
                       width: sW * 0.07,
                     ),
                     RichText(
+                      overflow: TextOverflow.ellipsis,
                       text: TextSpan(
                         text: '₹',
                         style: AppTheme.theme.textTheme.labelMedium?.copyWith(
@@ -301,6 +342,109 @@ Widget cartItemCard(Map<String, dynamic> item, int index, BuildContext context,
                         color: Colors.grey.shade900,
                       ),
                     ),
+                    cspacingWidth(sW * 0.22),
+                    isReturn
+                        ? Container()
+                        : InkWell(
+                            onTap: () {
+                              print(item['sku_name']);
+                              print(index);
+                              showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  context: context,
+                                  builder: (builder) {
+                                    Widget buildTextField(
+                                        TextEditingController controller,
+                                        String label,
+                                        String? hintText) {
+                                      return TextFormField(
+                                        controller: controller,
+                                        decoration: InputDecoration(
+                                          labelStyle: AppTheme
+                                              .theme.textTheme.headlineLarge
+                                              ?.copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.black,
+                                                  fontSize: 15),
+                                          labelText: label,
+                                          hintText: hintText,
+                                          enabledBorder:
+                                              const UnderlineInputBorder(),
+                                        ),
+                                      );
+                                    }
+
+                                    return SizedBox(
+                                      height: sH * 0.64,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(15),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            buildTextField(
+                                                TextEditingController(
+                                                    text: item['sku_name']),
+                                                "Item Name",
+                                                "Item Name"),
+                                            buildTextField(
+                                                TextEditingController(
+                                                    text: item['quantity']
+                                                        .toString()),
+                                                "Total Quantity",
+                                                "Total Quantity"),
+                                            buildTextField(
+                                                controller.missingQtyController,
+                                                "Missing Quantity",
+                                                "Missing Quantity"),
+                                            buildTextField(
+                                                TextEditingController(
+                                                    text: item['rent_price']
+                                                        .toString()),
+                                                "Rent Price",
+                                                "Rent Price (Each Item)"),
+                                            buildTextField(
+                                                TextEditingController(
+                                                    text: item['buy_price']
+                                                        .toString()),
+                                                "Missing Price",
+                                                "Missing Price per Item"),
+                                            const Text(
+                                              "Amount will be reflected in final billing amount",
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey),
+                                            ),
+                                            cspacingHeight(sH * 0.05),
+                                            cBtn("Return Item", () {
+                                              controller
+                                                  .updateOrderedItemStatus(
+                                                      item);
+                                              Get.back();
+                                            }, Colors.white),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppTheme.theme.primaryColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                "Return",
+                                textAlign: TextAlign.center,
+                                style: AppTheme.theme.textTheme.bodySmall
+                                    ?.copyWith(
+                                  color: AppTheme.theme.scaffoldBackgroundColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ],
@@ -327,7 +471,7 @@ class ReturnOrdersTab extends StatelessWidget {
       final activeItems = controller.orderedItems
           .where((item) => item['status'] == 'Return')
           .toList();
-      // activeItems.assignAll(controller.returnedOrdersData);
+
       if (activeItems.isEmpty) {
         return const Center(
           child: Text(
@@ -344,8 +488,9 @@ class ReturnOrdersTab extends StatelessWidget {
               itemCount: activeItems.length,
               itemBuilder: (context, index) {
                 final item = activeItems[index];
-                debugPrint("Return ITEM >>> $item");
-                return cartItemCard(item, index, context, controller);
+                debugPrint("Return ITEM in rteutnList>>> $item");
+                return cartItemCard(item, index, context, controller,
+                    isReturn: true);
               },
             ),
           ),

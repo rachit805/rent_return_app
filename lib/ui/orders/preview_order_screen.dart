@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/controller/add_item_order_controller.dart';
-import 'package:rent_and_return/ui/orders/add_address_screen.dart';
+// import 'package:rent_and_return/ui/orders/add_address_screen.dart';
 import 'package:rent_and_return/utils/theme.dart';
 import 'package:rent_and_return/widgets/c_btn.dart';
 import 'package:rent_and_return/widgets/c_sizedbox.dart';
@@ -21,11 +21,9 @@ class PreviewOrderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     double sH = MediaQuery.of(context).size.height;
 
-    // If orderData contains initial cart items, set them in the controller
-// Remove this code since `cartItems` is already reactive
-    final List<Map<String, dynamic>> finalCartItems =
-        (orderData['cart_items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    controller.setCartItems(finalCartItems);
+    // final List<Map<String, dynamic>> finalCartItems =
+    //     (orderData['cart_items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    controller.setCartItems(controller.itemsData);
 
     return Scaffold(
       appBar: AppBar(
@@ -92,10 +90,8 @@ class PreviewOrderScreen extends StatelessWidget {
               cBtn(
                 "Place Order",
                 () async {
-                  print("InititalCartItem IN UI:: $finalCartItems");
-
-                  print("InititalCartItem IN UI:: ${finalCartItems.length}");
-                  await controller.storeCartItemsInDBAndPlaceOrder();
+                  controller.palceOrder();
+                  // await controller.storeCartItemsInDBAndPlaceOrder();
                 },
                 AppTheme.theme.scaffoldBackgroundColor,
               ),
@@ -109,8 +105,8 @@ class PreviewOrderScreen extends StatelessWidget {
                   return ListView.builder(
                     itemCount: controller.cartItems.length,
                     itemBuilder: (context, index) {
-                      final item = controller.cartItems[index];
-
+                      // final item = controller.cartItems[index];
+                      final item = controller.itemsData[index];
                       print(" ADDED ITEM >>>$item");
                       return cartItemCard(item, index, context, controller);
                     },
@@ -135,11 +131,14 @@ class PreviewOrderScreen extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              Image.asset(
-                "assets/images/chair.png",
-                width: 80,
-                height: 80,
-                fit: BoxFit.fill,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.memory(
+                  item['image'] ?? Icon(Icons.hide_image),
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.fill,
+                ),
               ),
               const SizedBox(width: 15),
               Column(
