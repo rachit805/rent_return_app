@@ -134,7 +134,7 @@ class DatabaseHelper {
     "buy_price" REAL,
     "rent_price" REAL,
     "total_price" REAL,
-    "image" TEXT,
+    "image" BLOB,
     "delivery_date" TEXT,
     "return_date" TEXT,
     booked_date TEXT,

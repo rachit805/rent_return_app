@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:rent_and_return/controller/orders_controller/all_order_controller.dart';
 import 'package:rent_and_return/controller/orders_controller/return_summary_controller.dart';
 import 'package:rent_and_return/services/data_services.dart';
 import 'package:rent_and_return/ui/orders/view_return_summary_screen.dart';
 
 class OrderedItemController extends GetxController {
+  OrderedItemController(String orderId) {
+    this.orderId.value = orderId;
+  }
+
   @override
   void onInit() {
+    print("Ordfer id In OC>> ${orderId.value}");
+    print(orderedItems.length);
+    getOrderedItems();
     orderedItems.refresh();
-    returnedOrdersData.refresh();
+    print(orderedItems.length);
+
+    orderedItems
+        .where((element) => element['status'] == 'Return')
+        .toList()
+        .forEach((element) {
+      returnedOrdersData.add(element);
+    });
+    print("Reutn Orders Length in OC>>${returnedOrdersData.length}");
+    // returnedOrdersData.refresh();
 
     super.onInit();
   }
@@ -18,6 +35,9 @@ class OrderedItemController extends GetxController {
 
   final RxList<Map<String, dynamic>> orderedItems =
       <Map<String, dynamic>>[].obs;
+
+  final RxList<Map<String, dynamic>> activeItems = <Map<String, dynamic>>[].obs;
+
   final RxList<Map<String, dynamic>> missingOrdersData =
       <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> returnedOrdersData =
@@ -39,7 +59,7 @@ class OrderedItemController extends GetxController {
   // Fetch ordered items based on the current orderId
   Future<void> getOrderedItems() async {
     try {
-      if (orderId.isEmpty) {
+      if (orderId.value.isEmpty) {
         print("Order ID is empty. Cannot fetch ordered items.");
         return;
       }
@@ -50,6 +70,12 @@ class OrderedItemController extends GetxController {
         orderedItems.assignAll(data);
         print("Fetched Ordered Items: $orderedItems");
 
+        orderedItems
+            .where((element) => element['status'] == 'Active')
+            .toList()
+            .forEach((element) {
+          activeItems.add(element);
+        });
         // Populate TextEditingControllers with the first item's data
         populateControllersWithCurrentItem();
       } else {
@@ -128,6 +154,65 @@ class OrderedItemController extends GetxController {
     }
   }
 
+  void returnSelectedItem(Map<String, dynamic> item) async {
+    try {
+      if (missingQtyController.text.isNotEmpty) {
+        int? missingQty =
+            int.tryParse(missingQtyController.text); // Parse to int
+        if (missingQty != null && missingQty > 0) {
+          item['missing_qty'] = missingQty;
+
+          missingOrdersData.add(item);
+          print("Added to missingOrdersData: $item");
+
+          missingQtyController.text = '';
+        }
+      }
+
+      await updateOrderedItemStatus(orderedItems[currentIndex.value]);
+
+      returnedOrdersData.add(orderedItems[currentIndex.value]);
+
+      if (activeItems.length == 1) {
+        Get.off(() => ViewReturnSummaryScreen(
+              orderId: orderId.value,
+            ));
+      } else {
+        Get.back();
+      }
+      // int returnedQty = int.tryParse(totalQtyController.text) ?? 0;
+      // String skuName = skuNameController.text;
+
+      // if (returnedQty > 0) {
+      //   await getAndUpdateReturnQty(returnedQty, skuName);
+      // }
+
+      // Move to the next item
+//       if (currentIndex.value < orderedItems.length - 1) {
+//         currentIndex.value++;
+//         populateControllersWithCurrentItem(); // Populate controllers with new data
+//       } else {
+//         // Final step when all items are processed
+//         print(
+//             "All items have been returned."); // Define the lazyPut for ReturnSummaryController
+//         Get.lazyPut<ReturnSummaryController>(() => ReturnSummaryController());
+
+// // Access the controller where needed
+//         final returnSummaryController = Get.find<ReturnSummaryController>();
+
+// // Set missing item data in the summary controller
+//         returnSummaryController.setMissingitemData(missingOrdersData);
+
+//         // Clear ordered items list
+//         orderedItems.clear();
+
+//         // Navigate to the return summary screen
+//       }
+    } catch (e) {
+      print("Error in moveToNextItem: $e");
+    }
+  }
+
   void moveToNextItem() async {
     try {
       // Check if the current item's missingQtyController is not empty
@@ -179,6 +264,8 @@ class OrderedItemController extends GetxController {
 
 // Set missing item data in the summary controller
         returnSummaryController.setMissingitemData(missingOrdersData);
+
+        returnSummaryController.setOrdereditemData(orderedItems);
 
         // Clear ordered items list
         orderedItems.clear();

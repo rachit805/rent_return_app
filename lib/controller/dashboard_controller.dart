@@ -1,8 +1,17 @@
 import 'package:get/get.dart';
+import 'package:rent_and_return/controller/orders_controller/all_order_controller.dart';
 import 'package:rent_and_return/services/data_services.dart';
 import 'package:intl/intl.dart'; // For date formatting and comparison
 
 class DashboardController extends GetxController {
+  @override
+  void onInit() {
+    final AllOrderController allOrderController = Get.put(AllOrderController());
+    // allOrderController.customerData.value = customerdata;
+    print("CUsomer dta in Dc>> $customerdata");
+    super.onInit();
+  }
+
   var currentPage = 0.obs;
   final RxList<Map<String, dynamic>> returnedOrdersData =
       <Map<String, dynamic>>[].obs;
@@ -39,13 +48,21 @@ class DashboardController extends GetxController {
       <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> thisMonthsReturns =
       <Map<String, dynamic>>[].obs;
+  final RxMap<int, Map<String, dynamic>> customerdata =
+      <int, Map<String, dynamic>>{}.obs;
 
   Future<void> fetchOrderSummary() async {
     try {
       final data = await dbHelper.getOrderSummary();
       if (data != null) {
         orderSummary.assignAll(data);
-
+        for (var order in data) {
+          int customerId = order['customer_id'] ?? 0;
+          print("Cusatome Id in DC >>> $customerId");
+          if (!customerdata.containsKey(customerId)) {
+            await fetchCustomerData(customerId);
+          }
+        }
         // Clear previous lists
         todaysReturns.clear();
         thisWeeksReturns.clear();
@@ -92,6 +109,24 @@ class DashboardController extends GetxController {
       }
     } catch (e) {
       print("Error fetching order summary: $e");
+    }
+  }
+
+  Future<void> fetchCustomerData(int customerId) async {
+    try {
+      if (customerId == null || customerId == 0) {
+        print("Customer ID is 0. Cannot fetch customer data.");
+        return;
+      }
+      final data = await dbHelper.getCustomerDataById(customerId.toString());
+      if (data != null) {
+        customerdata[customerId] = data;
+        print("Customer data fetched for ID $customerId: $data");
+      } else {
+        print("No customer data found for ID $customerId.");
+      }
+    } catch (e) {
+      print("Error fetching customer data for ID $customerId: $e");
     }
   }
 }

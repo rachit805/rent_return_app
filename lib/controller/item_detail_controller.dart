@@ -164,25 +164,16 @@ class ItemDetailController extends GetxController {
       rentpriceController.clear();
 
       Get.back();
-      Get.snackbar(
+      showSuccessSnackbar(
         'Success',
         'Stock added successfully!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
       );
     } catch (e, stacktrace) {
       print("Error adding stock: $e");
       print("Stacktrace: $stacktrace");
 
-      Get.snackbar(
-        'Error',
+      showErrorSnackbar(  'Error',
         'Failed to add stock: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 15),
       );
     }
   }

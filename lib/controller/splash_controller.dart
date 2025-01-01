@@ -12,7 +12,7 @@ class SplashController extends GetxController {
     Future.delayed(const Duration(seconds: 2), () {
       loginController.checkLoginSession();
       if (loginController.storage.read('user_uid') != null) {
-        Get.offAll(() => Homepage());
+        Get.offAll(() => Homepage(initialPage: 2,));
       } else {
         Get.to(() => OnBoardingScreen());
       }

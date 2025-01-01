@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -20,7 +21,10 @@ class AddItemOrderController extends GetxController {
   RxString selectedCategory = ''.obs;
   RxList<String> items = <String>["Select Item"].obs;
   RxString selectedItem = ''.obs;
-  RxInt availableQty = 0.obs;
+
+  RxInt finalAvailableQty = 0.obs;
+  RxInt availableQtyinSKU = 0.obs;
+  RxInt cartAddedQty = 0.obs;
   RxList<String> sizes = <String>["Select Size"].obs;
   RxString selectedSize = ''.obs;
   RxInt remainingQty = 0.obs;
@@ -49,6 +53,7 @@ class AddItemOrderController extends GetxController {
   final RxString scategory = ''.obs;
   final RxString sitem = ''.obs;
   final RxString ssize = ''.obs;
+  Uint8List? imagefile;
   Future<void> storeCartItemsInDBAndPlaceOrder() async {
     for (var cartItem in cartItems) {
       // final orderId =
@@ -75,7 +80,7 @@ class AddItemOrderController extends GetxController {
         'order_id': parentOrderId,
         'image': cartItem['image'] ?? '',
         'status': "Active",
-        "booked_date": DateTime.now().toString(),
+        "booked_date": DateTime.now().toIso8601String().split('T').first,
       };
 
       try {
@@ -90,6 +95,8 @@ class AddItemOrderController extends GetxController {
         await dbHelper.updateMasterCardQty(
             remainingQty.value, scategory.value, sitem.value, ssize.value);
         print("REMAINING QTY>> $remainingQty");
+        print(customerData['customer_id']);
+        print(customerId.value);
 
         if (insertedData != null) {
           itemsData.value = insertedData;
@@ -99,7 +106,7 @@ class AddItemOrderController extends GetxController {
           deliveryDate.value = insertedData.first['delivery_date'] ?? '';
 
           // print('Inserted cart item DATA>>>> $insertedData');
-          Get.to(() => AddAddressScreen(totalAmount: totalAmount));
+          // Get.to(() => AddAddressScreen(totalAmount: totalAmount));
         } else {
           print('Failed to insert cart item.');
         }
@@ -107,6 +114,10 @@ class AddItemOrderController extends GetxController {
         print('Error inserting cart item: $e');
       }
     }
+  }
+
+  void palceOrder() {
+    Get.to(() => AddAddressScreen(totalAmount: totalAmount));
   }
 
   // Set initial cart items
@@ -139,7 +150,7 @@ class AddItemOrderController extends GetxController {
     final double total = itemsData.fold(0.0, (sum, item) {
       return sum + (item['totalItemRent'] ?? 0.0);
     });
-    totalAmount.value = total; // Update observable value
+    totalAmount.value = total;
     print("Updated Total Amount: $total");
   }
 
@@ -151,7 +162,7 @@ class AddItemOrderController extends GetxController {
           categoryData.map((e) => e['category_name'].toString()).toList();
       categories.insert(0, "Select Category"); // Add default option
     } catch (e) {
-      Get.snackbar("Error", "Failed to load categories: $e");
+      showErrorSnackbar("Error", "Failed to load categories: $e");
     }
   }
 
@@ -172,20 +183,14 @@ class AddItemOrderController extends GetxController {
       } else {
         items.value = ["Select Item"];
         sizes.value = ["Select Size"];
-        Get.snackbar("Error", "Category not found");
+        showErrorSnackbar("Error", "Category not found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to load items: $e");
+      showErrorSnackbar("Error", "Failed to load items: $e");
     }
   }
 
   Future<void> fetchSizes(String itemName) async {
-    // if (itemName == "Select Item" || itemName.isEmpty) {
-    //   sizes.value = ["Select Size"];
-    //   selectedSize.value = "Select Size";
-    //   return;
-    // }
-
     try {
       final List<Map<String, dynamic>> itemData =
           await dbHelper.getItemByName(itemName);
@@ -201,48 +206,55 @@ class AddItemOrderController extends GetxController {
         fetchSKUData(); // Automatically fetch SKU data if necessary
       } else {
         sizes.value = ["Select Size"];
-        Get.snackbar("Error", "Item not found");
+        showErrorSnackbar("Error", "Item not found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to load sizes: $e");
+      showErrorSnackbar("Error", "Failed to load sizes: $e");
     }
   }
 
   Future<void> fetchSKUData() async {
-    if (selectedCategory.value.isEmpty ||
-        selectedCategory.value == "Select Category" ||
-        selectedItem.value.isEmpty ||
-        selectedItem.value == "Select Item" ||
-        selectedSize.value.isEmpty ||
-        selectedSize.value == "Select Size") {
+    if (_isSelectionValid()) {
       priceController.clear();
       rentpriceController.clear();
       return;
     }
 
-    final String skuName =
-        "${selectedCategory.value}_${selectedItem.value}_${selectedSize.value}";
-
+    final skuName = _constructSKUName();
     try {
-      final List<Map<String, dynamic>> skuData =
-          await dbHelper.getSKUByName(skuName);
+      final skuData = await dbHelper.getSKUByName(skuName);
 
       if (skuData.isNotEmpty) {
-        final double buyPrice = skuData.first['purchase_price'];
-        final double rentPrice = skuData.first['rent_price'];
-        priceController.text = buyPrice.toStringAsFixed(1);
-        rentpriceController.text = rentPrice.toStringAsFixed(1);
-        final int qty = skuData.first['quantity'];
-        availableQty.value = qty;
-        // print("finalAvQty>> ${finalAvQty(qty)}");
+        _populateSKUDetails(skuData.first);
       } else {
-        priceController.clear();
-        rentpriceController.clear();
-        Get.snackbar("Error", "SKU not found");
+        _clearSKUFields();
+        showErrorSnackbar("Error", "SKU not found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to load SKU data: $e");
+      showErrorSnackbar("Error", "Failed to load SKU data: $e");
     }
+  }
+
+  bool _isSelectionValid() {
+    return [selectedCategory, selectedItem, selectedSize]
+        .any((value) => value.value.isEmpty || value.value.contains("Select"));
+  }
+
+  String _constructSKUName() {
+    return "${selectedCategory.value}_${selectedItem.value}_${selectedSize.value}";
+  }
+
+  void _populateSKUDetails(Map<String, dynamic> data) {
+    priceController.text = data['purchase_price'].toStringAsFixed(1);
+    rentpriceController.text = data['rent_price'].toStringAsFixed(1);
+    availableQtyinSKU.value = data['quantity'];
+    finalAvailableQty.value = availableQtyinSKU.value - cartAddedQty.value;
+    imagefile = data['image'];
+  }
+
+  void _clearSKUFields() {
+    priceController.clear();
+    rentpriceController.clear();
   }
 
   // Method to reset controllers (Optional utility function)
@@ -279,7 +291,8 @@ class AddItemOrderController extends GetxController {
       'deliveryDate': deliverydateController.text,
       'totalItemRent': totalItemRent,
       'status': "Active",
-      "booked_date": DateTime.now().toString(),
+      "booked_date": DateTime.now().toIso8601String().split('T').first,
+      "image": imagefile,
     };
 
     if (currentItemIndex.value < itemsData.length) {
@@ -299,6 +312,33 @@ class AddItemOrderController extends GetxController {
   }
 
   void nextItem() {
+    // Parse entered quantity or default to 0 if invalid
+    final enteredQty = int.tryParse(quantityController.text) ?? 0;
+
+    // Calculate total quantity in cart
+    final int cartQty = itemsData.fold(0, (sum, item) {
+      return sum + (item['quantity'] ?? 0) as int;
+    });
+    print("cartQty >>$cartQty");
+    cartAddedQty.value = cartQty;
+    print("Cart added Qty>> : ${cartAddedQty.value}");
+
+    // Calculate the final available quantity
+    finalAvailableQty.value = availableQtyinSKU.value - cartAddedQty.value;
+
+    // Validate stock and entered quantity
+    if (finalAvailableQty.value <= 0) {
+      showErrorSnackbar("Error", "This stock is empty");
+      return;
+    } else if (enteredQty <= 0) {
+      showErrorSnackbar("Error", "Please enter a valid quantity");
+      return;
+    } else if (enteredQty > finalAvailableQty.value) {
+      showErrorSnackbar("Error", "Entered quantity exceeds available stock");
+      return;
+    }
+
+    // Validate other fields and proceed to the next item
     if (_validateFields()) {
       saveCurrentItem();
       loadCurrentItem(); // Load the next item
@@ -353,10 +393,10 @@ class AddItemOrderController extends GetxController {
     final enteredQty = int.tryParse(quantityController.text) ?? 0;
 
     // Check if available quantity is less than 1 or entered quantity exceeds available quantity
-    if (availableQty < 1) {
+    if (availableQtyinSKU < 1) {
       showErrorSnackbar("Error", "This stock is Empty");
       return;
-    } else if (enteredQty > availableQty.value) {
+    } else if (enteredQty > availableQtyinSKU.value) {
       showErrorSnackbar("Error", "Entered quantity exceeds available stock");
       return;
     }

@@ -1,10 +1,7 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:rent_and_return/services/data_services.dart';
-import 'package:rent_and_return/ui/orders/all_orders_screen.dart';
-import 'package:rent_and_return/ui/orders/order_receipt_screen.dart';
+import 'package:rent_and_return/ui/bottom_nav_bar/homepage.dart';
 
 class ReturnSummaryController extends GetxController {
   @override
@@ -20,15 +17,22 @@ class ReturnSummaryController extends GetxController {
       <Map<String, dynamic>>[].obs; // List of filtered order summary data
   final RxList<Map<String, dynamic>> missingItemData =
       <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> orderedItemData =
+      <Map<String, dynamic>>[].obs;
+
   final TextEditingController cashAmountController = TextEditingController();
   final RxString ordersummaryID = "".obs;
   // Methods to set values
   void setOrderedSummaryData(List<Map<String, dynamic>> items) {
-    orderSummaryData.assignAll(items); // Use assignAll for RxList
+    orderSummaryData.assignAll(items);
   }
 
   void setMissingitemData(List<Map<String, dynamic>> items) {
-    missingItemData.assignAll(items); // Use assignAll for RxList
+    missingItemData.assignAll(items);
+  }
+
+  void setOrdereditemData(List<Map<String, dynamic>> items) {
+    orderedItemData.assignAll(items);
   }
 
   void setOrderID(String id) {
@@ -40,7 +44,7 @@ class ReturnSummaryController extends GetxController {
   Future<void> fetchOrderSummary() async {
     try {
       final List<Map<String, dynamic>> data = await dbHelper.getOrderSummary();
-      if (data != null && data.isNotEmpty) {
+      if (data.isNotEmpty) {
         print("ORDER ID IN RC: ${orderId.value}");
 
         // Filter the data based on order_id
@@ -68,8 +72,6 @@ class ReturnSummaryController extends GetxController {
   Future<void> updateOrderStatus(id) async {
     try {
       final db = await dbHelper.database;
-
-      // Update the status field in the database
       await db.update(
         "order_summary",
         {"status": "Closed Order"},
@@ -77,7 +79,7 @@ class ReturnSummaryController extends GetxController {
         whereArgs: [id],
       );
 
-      // print("Item with ID ${item['cart_id']} status updated to 'Return'.");
+      print("b  $id} status updated to 'Return'.");
     } catch (e) {
       print("Error updating item status: $e");
     }
@@ -86,6 +88,6 @@ class ReturnSummaryController extends GetxController {
   void closeOrder() async {
     print("ORDER S ID>>> ${ordersummaryID.value}");
     await updateOrderStatus(ordersummaryID.value);
-    Get.off(AllOrdersScreen());
+    Get.offAll(Homepage(initialPage: 1));
   }
 }

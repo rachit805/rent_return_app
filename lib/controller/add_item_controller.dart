@@ -15,6 +15,7 @@ class AddItemController extends GetxController {
   @override
   void onInit() {
     loadInterstitialAd();
+    fetchCategories();
     super.onInit();
   }
 
@@ -44,7 +45,6 @@ class AddItemController extends GetxController {
   var isLoading = false.obs;
 
   final ImagePicker _picker = ImagePicker();
-
   Future<void> pickImage(ImageSource source) async {
     isLoading.value = true; // Start loading
     final XFile? image = await _picker.pickImage(source: source);
@@ -55,21 +55,14 @@ class AddItemController extends GetxController {
     isLoading.value = false; // Stop loading
   }
 
-  ////// COMPRESED IMAGE
   Future<Uint8List> compressAndResizeImage(File file) async {
-    // Read the image file as bytes
     Uint8List imageBytes = await file.readAsBytes();
 
-    // Decode the image
     img.Image? originalImage = img.decodeImage(imageBytes);
 
     if (originalImage != null) {
-      // Resize the image to a smaller dimension (e.g., max width: 300px)
       img.Image resizedImage = img.copyResize(originalImage, width: 300);
-
-      // Encode the resized image to JPEG with compression
-      return Uint8List.fromList(
-          img.encodeJpg(resizedImage, quality: 75)); // 75% quality
+      return Uint8List.fromList(img.encodeJpg(resizedImage, quality: 75));
     }
 
     throw Exception("Failed to process image");
@@ -86,11 +79,15 @@ class AddItemController extends GetxController {
 
           interstitialAd?.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
-              Get.offAll(() => Homepage());
+              Get.offAll(() => Homepage(
+                    initialPage: 2,
+                  ));
               ad.dispose();
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
-              Get.offAll(() => Homepage());
+              Get.offAll(() => Homepage(
+                    initialPage: 2,
+                  ));
               ad.dispose();
             },
           );
@@ -107,72 +104,129 @@ class AddItemController extends GetxController {
       interstitialAd!.show();
     } else {
       print("Ad not ready, navigating directly.");
-      Get.to(() => Homepage());
+      Get.to(() => Homepage(
+            initialPage: 2,
+          ));
     }
   }
 
   void debugPrintDatabase() async {
-    final dbHelper = DatabaseHelper(); // Create an instance of DatabaseHelper
-    await dbHelper.printAllTablesData(); // Call the method
+    final dbHelper = DatabaseHelper();
+    await dbHelper.printAllTablesData();
   }
 
-  // Load data from the database
-  Future<void> loadCategories() async {
-    final categoryData = await dbHelper.getCategories();
-    categories.value =
-        categoryData.map((c) => c['category_name'].toString()).toList();
-  }
+//  Future<void> loadCategories() async {
+//     final categoryData = await dbHelper.getCategories();
+//     categories.value =
+//         categoryData.map((c) => c['category_name'].toString()).toList();
+//   }
 
-  Future<void> loadItems(int categoryUid) async {
-    final itemData = await dbHelper.getItems(categoryUid);
-    items.value = itemData.map((i) => i['item_name'].toString()).toList();
-  }
+//   Future<void> loadItems(int categoryUid) async {
+//     final itemData = await dbHelper.getItems(categoryUid);
+//     items.value = itemData.map((i) => i['item_name'].toString()).toList();
+//   }
 
-  Future<void> loadSizes(int itemId) async {
-    final sizeData = await dbHelper.getSizes(itemId);
-    sizes.value = sizeData.map((s) => s['size_name'].toString()).toList();
-  }
+//   Future<void> loadSizes(int itemId) async {
+//     final sizeData = await dbHelper.getSizes(itemId);
+//     sizes.value = sizeData.map((s) => s['size_name'].toString()).toList();
+//   }
 
-  Future<void> addCategory(String categoryName) async {
+  Future<void> fetchCategories() async {
     try {
-      // Check if the category already exists
-      final existingCategory = await dbHelper.getCategoryByName(categoryName);
+      final List<Map<String, dynamic>> categoryData =
+          await dbHelper.getCategories();
+      categories.value =
+          categoryData.map((e) => e['category_name'].toString()).toList();
+      categories.insert(0, "Select Category"); // Add default option
+      fetchItems(selectedCategory.value);
+    } catch (e) {
+      showErrorSnackbar("Error", "Failed to load categories: $e");
+    }
+  }
 
-      if (existingCategory.isNotEmpty) {
-        Get.snackbar("Error", "Category already exists.");
+  Future<void> fetchItems(String categoryName) async {
+    try {
+      final List<Map<String, dynamic>> categoryData =
+          await dbHelper.getCategoryByName(categoryName);
+
+      if (categoryData.isNotEmpty) {
+        final int categoryUid = categoryData.first['category_uid'];
+        final List<Map<String, dynamic>> itemData =
+            await dbHelper.getItemsByCategoryId(categoryUid);
+
+        items.value = itemData.map((e) => e['item_name'].toString()).toList();
+        items.insert(0, "Select Item"); 
+        selectedItem.value = "Select Item";
+        sizes.value = ["Select Size"]; 
       } else {
-        final category = {'category_name': categoryName, 'category_desc': ''};
-        await dbHelper.insertCategory(category);
-        await loadCategories();
-        Get.snackbar("Success", "Category added.");
+        items.value = ["Select Item"];
+        sizes.value = ["Select Size"];
+        // showErrorSnackbar("Error", "Category not found");
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to add category: $e");
+      showErrorSnackbar("Error", "Failed to load items: $e");
     }
   }
 
-  Future<void> addItem(String itemName) async {
-    if (selectedCategory.isEmpty) {
-      Get.snackbar("Error", "Please select a category first.");
+  Future<void> fetchSizes(String itemName) async {
+    try {
+      final List<Map<String, dynamic>> itemData =
+          await dbHelper.getItemByName(itemName);
+
+      if (itemData.isNotEmpty) {
+        final int itemId = itemData.first['item_id'];
+        final List<Map<String, dynamic>> sizeData =
+            await dbHelper.getSizesByItemId(itemId);
+
+        sizes.value = sizeData.map((e) => e['size_name'].toString()).toList();
+        sizes.insert(0, "Select Size"); // Add default option
+        selectedSize.value = "Select Size"; // Reset selected size
+        // fetchSKUData(); // Automatically fetch SKU data if necessary
+      } else {
+        sizes.value = ["Select Size"];
+        showErrorSnackbar("Error", "Item not found");
+      }
+    } catch (e) {
+      showErrorSnackbar("Error", "Failed to load sizes: $e");
+    }
+  }
+Future<void> addCategory(String categoryName) async {
+  try {
+    final existingCategory = await dbHelper.getCategoryByName(categoryName);
+
+    if (existingCategory.isNotEmpty) {
+      showErrorSnackbar("Error", "Category already exists.");
+    } else {
+      final category = {'category_name': categoryName, 'category_desc': ''};
+      await dbHelper.insertCategory(category);
+      await fetchCategories(); // Refresh category list immediately
+      selectedCategory.value = categoryName; // Set the new category as selected
+      showSuccessSnackbar("Success", "Category added.");
+    }
+  } catch (e) {
+    showErrorSnackbar("Error", "Failed to add category: $e");
+  }
+}
+
+Future<void> addItem(String itemName) async {
+  try {
+    if (selectedCategory.isEmpty || selectedCategory.value == "Select Category") {
+      showErrorSnackbar("Error", "Please select a category first.");
       return;
     }
 
-    // Get the selected category's UID
     final categoryUid = await _getCategoryUidByName(selectedCategory.value);
     if (categoryUid == null) {
-      Get.snackbar("Error", "Invalid category selection.");
+      showErrorSnackbar("Error", "Invalid category selection.");
       return;
     }
 
-    // Check if the item already exists under the selected category
-    final existingItem =
-        await dbHelper.getItemByNameAndCategory(itemName, categoryUid);
+    final existingItem = await dbHelper.getItemByNameAndCategory(itemName, categoryUid);
     if (existingItem.isNotEmpty) {
-      Get.snackbar("Error", "Item already exists in this category.");
+      showErrorSnackbar("Error", "Item already exists in this category.");
       return;
     }
 
-    // Prepare the new item data
     final item = {
       'category_uid': categoryUid,
       'item_name': itemName,
@@ -180,35 +234,31 @@ class AddItemController extends GetxController {
       'status': 'active',
     };
 
-    // Insert item and get item ID
-    final itemId = await dbHelper.insertItemAndGetId(item);
-    if (itemId != null) {
-      await loadItems(
-          categoryUid); // Refresh the item list for the selected category
-      showSuccessSnackbar(
-          "Success", "Item added successfully with ID: $itemId.");
-    } else {
-      showErrorSnackbar("Error", "Failed to add item.");
-    }
+    await dbHelper.insertItemAndGetId(item);
+    await fetchItems(selectedCategory.value); // Refresh item list immediately
+    selectedItem.value = itemName; // Set the new item as selected
+    showSuccessSnackbar("Success", "Item added.");
+  } catch (e) {
+    showErrorSnackbar("Error", "Failed to add item: $e");
   }
+}
 
-  // Add a new size under the selected item
-  Future<void> addSize(String sizeName) async {
-    if (selectedItem.isEmpty) {
+Future<void> addSize(String sizeName) async {
+  try {
+    if (selectedItem.isEmpty || selectedItem.value == "Select Item") {
       showErrorSnackbar("Error", "Please select an item first.");
       return;
     }
 
-    // Get the selected item's ID
     final itemId = await _getItemIdByName(selectedItem.value);
     if (itemId == null) {
       showErrorSnackbar("Error", "Invalid item selection.");
       return;
     }
-    // Check if the size already exists under the selected category
+
     final existingSize = await dbHelper.getSIzeByItem(sizeName, itemId);
     if (existingSize.isNotEmpty) {
-      showErrorSnackbar("Error", "Size already exists in this category.");
+      showErrorSnackbar("Error", "Size already exists for this item.");
       return;
     }
 
@@ -218,10 +268,15 @@ class AddItemController extends GetxController {
       'size_desc': '',
       'status': 'active',
     };
+
     await dbHelper.insertSize(size);
-    await loadSizes(itemId);
+    await fetchSizes(selectedItem.value); // Refresh size list immediately
+    selectedSize.value = sizeName; // Set the new size as selected
     showSuccessSnackbar("Success", "Size added.");
+  } catch (e) {
+    showErrorSnackbar("Error", "Failed to add size: $e");
   }
+}
 
 // Add SKU to inventory or update stock in slavecarddetail
   Future<void> addItemToInventory() async {

@@ -25,7 +25,11 @@ class PaymentSuccessScreen extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
-        Get.offAll(() => Homepage(), arguments: {"initialPage": 1});
+        Get.offAll(
+            () => Homepage(
+                  initialPage: 1,
+                ),
+            arguments: {"initialPage": 1});
         return false; // Prevent default back navigation
       },
       child: Scaffold(
@@ -33,7 +37,11 @@ class PaymentSuccessScreen extends StatelessWidget {
           preferredSize: const Size.fromHeight(70),
           child: cAppbar2("Payment Successful", () {
             // Same behavior as the back button
-            Get.offAll(() => Homepage(), arguments: {"initialPage": 1});
+            Get.offAll(
+              () => Homepage(
+                initialPage: 1,
+              ),
+            );
           }),
         ),
         body: Padding(

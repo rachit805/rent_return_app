@@ -37,7 +37,7 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
                   controller.aMobController, "Alternative Mobile Number", ''),
               Spacing.v10,
               buildTextField(controller.cNameController, "Customer Name", ''),
-              Spacing.v10,
+              Spacing.v20,
               Obx(() => SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -45,7 +45,7 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
                       isExpanded: true,
                       isDense: true,
                       underline: const Divider(
-                        thickness: 1,
+                        thickness: 1, 
                         color: Colors.black87,
                       ),
                       value: controller.selectedCard.value.isNotEmpty
@@ -69,7 +69,7 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
                       },
                     ),
                   )),
-              Spacing.v10,
+              // Spacing.v10,
               buildTextField(controller.idNumController, "Id Number", ""),
               Spacing.v10,
               buildTextField(controller.addressController, "Address", ''),
@@ -101,12 +101,18 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
       TextEditingController controller, String label, String? hintText) {
     return TextFormField(
       controller: controller,
+      style: TextStyle(
+          color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
+      cursorColor: AppTheme.theme.primaryColor,
       decoration: InputDecoration(
         labelStyle: AppTheme.theme.textTheme.headlineLarge?.copyWith(
             fontWeight: FontWeight.w500, color: Colors.black, fontSize: 15),
         labelText: label,
         hintText: hintText,
         enabledBorder: const UnderlineInputBorder(),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppTheme.theme.primaryColor),
+        ),
       ),
     );
   }
@@ -114,6 +120,9 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
   Widget buildDatePickerField(TextEditingController textController,
       String label, BuildContext context) {
     return TextFormField(
+      style: TextStyle(
+          color: Colors.black, fontWeight: FontWeight.w600, fontSize: 16),
+      cursorColor: AppTheme.theme.primaryColor,
       controller: textController,
       readOnly: true,
       decoration: InputDecoration(
@@ -126,6 +135,9 @@ class CreateOrderUserDetailScreen extends StatelessWidget {
         labelText: label,
         hintText: 'DD/MM/YYYY',
         enabledBorder: const UnderlineInputBorder(),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppTheme.theme.primaryColor),
+        ),
       ),
       onTap: () {
         controller.pickDate(textController, context); // Corrected usage

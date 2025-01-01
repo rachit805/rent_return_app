@@ -29,6 +29,7 @@ class OrderReceiptScreen extends StatelessWidget {
 
     double sH = MediaQuery.of(context).size.height;
     controller.getCustomerData();
+    controller.refresh();
     String getFormattedOrderDate(String orderId) {
       try {
         String datePart = orderId.split('_')[1];

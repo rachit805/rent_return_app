@@ -298,31 +298,7 @@ class OrderHistoryTab extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              // Container(
-              //   width: 80,
-              //   height: 80,
-              //   decoration: BoxDecoration(
-              //     border: Border.all(
-              //       width: 1.5,
-              //       color: Colors.grey.shade400,
-              //     ),
-              //     borderRadius: BorderRadius.circular(20),
-              //   ),
-              //   child: (imageFile != null && imageFile is Uint8List)
-              //       ? ClipOval(
-              //           child: Image.memory(
-              //           imageFile,
-              //           fit: BoxFit.fill,
-              //         )) // Display image
-              //       : Icon(
-              //           Icons.image_not_supported,
-              //           color: Colors.black54,
-              //         ), // Placeholder if no image
-              // ),
-
-              // const SizedBox(width: 15),
               Column(
-                // mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -333,7 +309,6 @@ class OrderHistoryTab extends StatelessWidget {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey.shade700)),
-                      // Expanded(child: SizedBox()),
                       SizedBox(
                         width: 20,
                       ),
@@ -358,13 +333,110 @@ class OrderHistoryTab extends StatelessWidget {
                           ],
                         ),
                       ),
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: Colors.black26,
-                        child: Text(
-                          "i",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.w800),
+                      cspacingWidth(sW * 0.05),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.info_outline,
+                            color: Colors.black,
+                          ),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              isScrollControlled: true,
+                              context: context,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(25.0)),
+                              ),
+                              builder: (BuildContext context) {
+                                Widget detailRow(String label, String value) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          label,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          value,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                return Container(
+                                  // height: sH * 0.7,
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(25.0)),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Center(
+                                        child: Container(
+                                          width: 50,
+                                          height: 5,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[300],
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: 20),
+                                      Center(
+                                        child: Text(
+                                          'Order Details',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(height: 20),
+                                      detailRow('Order ID:',
+                                          item['order_id'].toString()),
+                                      // detailRow('Customer Name:', name),
+                                      // detailRow('City:', city),
+                                      // detailRow('Phone:', phone),
+                                      detailRow('Total Bill Amount:',
+                                          '₹${item['total_bill_amount']}'),
+                                      detailRow('Pending Bill Amount:',
+                                          '₹${item['pending_amount']}'),
+                                      detailRow('Delivery Date:',
+                                          item['delivery_date'] ?? 'N/A'),
+                                      detailRow('Return Date:',
+                                          item['return_date'] ?? 'N/A'),
+                                      detailRow(
+                                          'Booked Date:',
+                                          item['transcation_date_time'] ??
+                                              'N/A'),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          tooltip: 'Order Details',
                         ),
                       )
                     ],

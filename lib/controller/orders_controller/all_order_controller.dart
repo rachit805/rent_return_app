@@ -12,7 +12,7 @@ class AllOrderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    initializeBannerAd();
+    // initializeBannerAd();
   }
 
   final DatabaseHelper dbHelper = DatabaseHelper();
@@ -22,36 +22,37 @@ class AllOrderController extends GetxController {
       <int, Map<String, dynamic>>{}.obs;
 
   // Initialize Banner Ad
-  void initializeBannerAd() {
-    bannerAd = BannerAd(
-      size: AdSize.banner,
-      adUnitId: AdHelper.bannerAdUnitId,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          print("Banner Ad Loaded");
-          isBannerAdLoaded.value = true;
-          update();
-        },
-        onAdFailedToLoad: (ad, error) {
-          print("Failed to load Banner Ad: ${error.message}");
-          ad.dispose();
-        },
-      ),
-      request: const AdRequest(),
-    )..load();
-  }
+  // void initializeBannerAd() {
+  //   bannerAd = BannerAd(
+  //     size: AdSize.banner,
+  //     adUnitId: AdHelper.bannerAdUnitId,
+  //     listener: BannerAdListener(
+  //       onAdLoaded: (ad) {
+  //         print("Banner Ad Loaded");
+  //         isBannerAdLoaded.value = true;
+  //         update();
+  //       },
+  //       onAdFailedToLoad: (ad, error) {
+  //         print("Failed to load Banner Ad: ${error.message}");
+  //         ad.dispose();
+  //       },
+  //     ),
+  //     request: const AdRequest(),
+  //   )..load();
+  // }
 
   Future<void> fetchOrderSummary() async {
     try {
       final data = await dbHelper.getOrderSummary();
       if (data != null) {
-        orderSummary.assignAll(data);
+        orderSummary.assignAll(data.reversed.toList());
         final ReturnSummaryController returnSummaryController =
             Get.put(ReturnSummaryController());
         returnSummaryController.setOrderedSummaryData(data);
         print("Order summary fetched: $orderSummary");
         for (var order in data) {
-          int customerId = order['customer_id'];
+          int customerId = order['customer_id'] ?? 0;
+          print("Cusatome Id >>> $customerId");
           if (!customerData.containsKey(customerId)) {
             await fetchCustomerData(customerId);
           }
@@ -66,6 +67,10 @@ class AllOrderController extends GetxController {
 
   Future<void> fetchCustomerData(int customerId) async {
     try {
+      if (customerId == null || customerId == 0) {
+        print("Customer ID is 0. Cannot fetch customer data.");
+        return;
+      }
       final data = await dbHelper.getCustomerDataById(customerId.toString());
       if (data != null) {
         customerData[customerId] = data;

@@ -17,6 +17,7 @@ class CreateOrderController extends GetxController {
   final returnDateController = TextEditingController();
   final newAddressController = TextEditingController();
   final advanceAmountController = TextEditingController();
+      RxList insertedCustomerData = <Map<String, dynamic>>[].obs;
 
   var customerId = 0.obs;
 
@@ -62,6 +63,7 @@ class CreateOrderController extends GetxController {
       print("CUSTOMER DATA IN CONTROLLER: $result");
       customerId.value = result['customer_id'];
       print("CUSTOMER ID: ${customerId.value}");
+      insertedCustomerData.add(result);
 
       final AddItemOrderController addItemInOrderController =
           Get.put(AddItemOrderController());
@@ -70,7 +72,7 @@ class CreateOrderController extends GetxController {
       showSuccessSnackbar("Success", "Customer data saved successfully!");
       Get.to(() => AddItemInOrderScreen(
           cname: cNameController.text, mob: mobController.text));
-      dbHelper.getAllCustomersData();
+      // dbHelper.getAllCustomersData();
     } catch (e) {
       print(e);
       showErrorSnackbar("Error", "Failed to save customer data: $e");
@@ -92,6 +94,54 @@ class CreateOrderController extends GetxController {
       controller.text =
           "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
       update(); // Notify listeners about the update
+    }
+  }
+
+  RxString selectedAddress = ''.obs;
+  RxList<String> addressList = <String>[].obs;
+
+  Future<void> addNewAddress() async {
+    final db = await dbHelper.database;
+    final newAddressData = {
+      'address': newAddressController.text,
+    };
+
+    // Fetch the current address from the database
+    final currentData = await db.query(
+      'customer_data',
+      where: 'customer_id = ?',
+      whereArgs: [customerId.value],
+    );
+
+    if (currentData.isNotEmpty) {
+      final currentAddress = currentData.first['address'];
+      final updatedAddress = '$currentAddress, ${newAddressController.text}';
+
+      await db.update(
+        'customer_data',
+        {'address': updatedAddress},
+        where: 'customer_id = ?',
+        whereArgs: [customerId.value],
+      );
+      newAddressController.text = '';
+      // Update the address list
+      addressList.value = updatedAddress.split(', ');
+    }
+  }
+
+  Future<void> fetchAddresses() async {
+    final db = await dbHelper.database;
+
+    // Fetch the current address from the database
+    final currentData = await db.query(
+      'customer_data',
+      where: 'customer_id = ?',
+      whereArgs: [customerId.value],
+    );
+
+    if (currentData.isNotEmpty) {
+      final currentAddress = currentData.first['address'];
+      addressList.value = (currentAddress as String).split(', ');
     }
   }
 }

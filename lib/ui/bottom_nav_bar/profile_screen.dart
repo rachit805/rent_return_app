@@ -95,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                             readOnly: true,
                             controller: controller.ownerNameController,
                             decoration: const InputDecoration(
-                                labelText: "Company Name",
+                                // labelText: "Company Name",
                                 hintText: "Company Name",
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.only(left: 25),
@@ -130,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
                             controller: controller.phoneNumberController,
                             decoration: const InputDecoration(
                                 hintText: "Mobile Number",
-                                labelText: "Mobile Number",
+                                // labelText: "Mobile Number",
                                 suffixIcon: Padding(
                                   padding: EdgeInsets.only(left: 25),
                                   child: Icon(
