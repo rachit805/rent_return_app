@@ -15,7 +15,7 @@ Rent & Return is a vendor-side application that allows you to:
 
 ## Screenshots
 
-![Login Screen](path/to/screenshots/login.jpg)
+![Login Screen](screenshots/login.jpg)
 ![Inventory Management](path/to/inventory_management_image.png)
 ![Order Management](path/to/order_management_image.png)
 
