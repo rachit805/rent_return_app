@@ -18,7 +18,18 @@ Rent & Return is a vendor-side application that allows you to:
 ![Splash](screenshots/add_inventory.jpg)
 ![Inventory Management](screenshots/items.jpg)
 ![Order Management](screenshots/item_details.jpg)
+![Order Management](screenshots/profile.jpg)
+![Order Management](screenshots/new_order.jpg)
+![Order Management](screenshots/add_item_order.jpg)
+![Order Management](screenshots/add_address.jpg)
 
+![Order Management](screenshots/preview_order.jpg)
+![Order Management](screenshots/payment_success.jpg)
+![Order Management](screenshots/generate_pdf.jpg)
+
+![Order Management](screenshots/order_details.jpg)
+
+![Order Management](screenshots/home_dashboard.jpg)
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
