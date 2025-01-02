@@ -1,16 +1,96 @@
-# rent_and_return
+# Rent & Return App
 
-A new Flutter project.
+Rent & Return is a vendor-side application that allows you to:
+- Add and manage inventories
+- Place and take return orders
+- Generate PDFs
+
+## Features
+
+- **Inventory Management**: Easily add, edit, and manage your inventory.
+- **Order Management**: Place new orders and manage return orders.
+- **PDF Generation**: Generate detailed PDF reports for orders and inventory.
+
+## Screenshots
+
+![Login Screen](path/to/login_screen_image.png)
+![Inventory Management](path/to/inventory_management_image.png)
+![Order Management](path/to/order_management_image.png)
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Flutter SDK
+- Dart SDK
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/rachit805/rent_return_app.git
+    cd rent_return_app
+    ```
+
+2. Install dependencies:
+    ```bash
+    flutter pub get
+    ```
+
+3. Run the app:
+    ```bash
+    flutter run
+    ```
+
+## Usage
+
+### Adding Inventory
+
+1. Go to the Inventory Management screen.
+2. Click on 'Add Item'.
+3. Fill in the required details and submit.
+
+### Placing Orders
+
+1. Go to the Order Management screen.
+2. Click on 'Place Order'.
+3. Fill in the order details and submit.
+
+### Generating PDFs
+
+1. Go to the Reports section.
+2. Select the report type and date range.
+3. Click on 'Generate PDF'.
+
+## Contributing
+
+We welcome contributions to improve this project. Please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch:
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+3. Make your changes and commit them:
+    ```bash
+    git commit -m 'Add some feature'
+    ```
+4. Push to the branch:
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+5. Create a new Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Flutter
+- Dart
+- The open-source community
+
+For more details, refer to the [documentation](https://docs.flutter.dev/).
